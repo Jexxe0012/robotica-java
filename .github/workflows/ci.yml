@@ -1,0 +1,40 @@
+name: Validar Robótica Java
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Motor, persistencia y Java real
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+      - name: Verificar 90 misiones y persistencia
+        run: npm test
+      - name: Compilar y ejecutar las 90 exportaciones Java
+        run: npm run test:java
+      - name: Construir el Worker
+        run: npm run build
