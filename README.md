@@ -1,21 +1,21 @@
 # Robótica Java · Lógica y POO
 
-Laboratorio educativo en español con **90 misiones**, construido a partir de la primera versión Huerto Java. Se aprende a leer, predecir, ordenar, depurar y escribir código, con un mapa de robots y un inspector de variables, objetos, referencias y llamadas.
+Aventura educativa en español con **90 misiones**, construida a partir de la primera versión Huerto Java. Se aprende a leer, predecir, ordenar, depurar y escribir código, con Atlas en un entorno 2D pixel art y un inspector de variables, objetos, referencias y llamadas.
 
-- **Repositorio privado:** [Jexxe0012/robotica-java](https://github.com/Jexxe0012/robotica-java).
+- **Repositorio:** [Jexxe0012/robotica-java](https://github.com/Jexxe0012/robotica-java).
 - **Despliegue privado:** [Abrir Robótica Java](https://huerto-java-josue.sandobaljosue16.chatgpt.site).
 - **Comprobaciones automáticas:** [GitHub Actions](https://github.com/Jexxe0012/robotica-java/actions).
 
 El proyecto enseña Java, mientras que la aplicación web y el intérprete están implementados en JavaScript. Los ejercicios descargables se ejecutan con un JDK real. No requiere Minecraft ni un servidor de Minecraft.
 
-## Vista de aventura en revisión
+## Aventura de Atlas
 
-La rama `codex/aventura-pixel-art` propone una interfaz de aventura 2D: un camino de diez misiones por capítulo, ilustraciones pixel art y Atlas como personaje del escenario. El mapa presenta las 90 misiones originales, permite explorar cualquier capítulo y marca las finalizaciones reales del usuario. El enlace del Site de arriba sigue mostrando la versión publicada; esta propuesta se revisa antes de integrar y desplegar.
+La interfaz presenta un camino de diez misiones por capítulo, ilustraciones pixel art y Atlas como personaje del escenario. El mapa incluye las 90 misiones originales, permite explorar cualquier capítulo y marca las finalizaciones reales del usuario. La aventura está integrada en `main` y utiliza los estados del intérprete para animar a los robots.
 
-Para probar esta rama después de clonar el repositorio:
+Para ejecutar el juego localmente después de clonar el repositorio:
 
 ```sh
-git switch codex/aventura-pixel-art
+git switch main
 npm ci
 npm run dev
 ```
@@ -81,7 +81,8 @@ robotica-java/
 ├── server/api.js              # API de progreso y validación de solicitudes
 ├── tests/
 │   ├── check.mjs              # Misiones, semántica del motor y persistencia
-│   └── java.mjs               # Compila y ejecuta las 90 exportaciones
+│   ├── java.mjs               # Compila y ejecuta las 90 exportaciones
+│   └── assets.mjs             # Recursos binarios y respuestas HTTP del Worker
 └── web/
     ├── index.html             # Estructura y controles accesibles
     ├── styles.css             # Diseño de escritorio y móvil
