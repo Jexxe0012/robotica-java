@@ -15,6 +15,8 @@ Ambos PNG se generaron con la herramienta integrada ImageGen, con transparencia 
 
 La hoja contiene **sur / norte** en la primera fila y **este / oeste** en la segunda. Se conserva completa, sin recortar ni volver a pintar el arte generado. CSS selecciona una celda con `background-size: 200% 200%` y muestra los píxeles con `image-rendering: pixelated`.
 
+Los PNG miden 1254 × 1254; cada celda direccional mide 627 × 627. Los límites visibles, medidos con alfa ≥128, son sur `(105,93)–(546,612)`, norte `(82,93)–(522,612)`, este `(187,58)–(483,567)` y oeste `(144,58)–(441,567)`. Pequeñas traslaciones CSS y una escala de 1.02 para los perfiles alinean el centro del cuerpo, la altura y los pies al girar. El arte conserva sombreado discreto y bordes parcialmente transparentes; no es una imagen de paleta indexada estricta.
+
 ## Movimiento y lectura del código
 
 `web/journey.js` mantiene un elemento por ID de objeto. `web/robot.css` relaciona la orientación del intérprete con la celda correspondiente: `0` este, `1` sur, `2` oeste y `3` norte. Girar cambia la vista del robot sin desplazarlo. `avanzar()` sigue esa orientación; `este()`, `oeste()`, `norte()` y `sur()` conservan su semántica de desplazamiento absoluto sin giro implícito.

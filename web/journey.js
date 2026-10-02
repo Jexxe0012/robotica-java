@@ -151,8 +151,9 @@
       if (!actor) {
         actor = el('div', undefined, 'robot-actor snap' + (index ? ' helper' : ''));
         actor.dataset.objectId = object.id;
-        const image = el('img'); image.src = 'assets/atlas.png'; image.alt = ''; image.width = 144; image.height = 144;
-        actor.append(image, el('span', '', 'robot-label'));
+        const sprite = el('span', undefined, 'robot-sprite');
+        sprite.setAttribute('aria-hidden', 'true');
+        actor.append(sprite, el('span', '', 'robot-label'));
         $('robot-layer').append(actor); actors.set(object.id, actor);
         requestAnimationFrame(() => actor.classList.remove('snap'));
       }
