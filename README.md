@@ -8,11 +8,30 @@ Laboratorio educativo en español con **90 misiones**, construido a partir de la
 
 El proyecto enseña Java, mientras que la aplicación web y el intérprete están implementados en JavaScript. Los ejercicios descargables se ejecutan con un JDK real. No requiere Minecraft ni un servidor de Minecraft.
 
+## Vista de aventura en revisión
+
+La rama `codex/aventura-pixel-art` propone una interfaz de aventura 2D: un camino de diez misiones por capítulo, ilustraciones pixel art y Atlas como personaje del escenario. El mapa presenta las 90 misiones originales, permite explorar cualquier capítulo y marca las finalizaciones reales del usuario. El enlace del Site de arriba sigue mostrando la versión publicada; esta propuesta se revisa antes de integrar y desplegar.
+
+Para probar esta rama después de clonar el repositorio:
+
+```sh
+git switch codex/aventura-pixel-art
+npm ci
+npm run dev
+```
+
+Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y una misión puede abrirse directamente con `#m51`. Escape o **Mapa de capítulos** vuelve al camino y pausa la ejecución. **Pausar**, **Continuar**, **Paso a paso** y **Reiniciar prueba** permiten observar los cambios. La opción **Coordenadas** muestra las posiciones sin recargar la escena.
+
+`web/journey.js` se ocupa del mapa, del HUD y de la representación visual. Los robots se mantienen como elementos de una capa superpuesta, identificados por el ID del objeto del intérprete. Sus posiciones usan porcentajes de un tablero de 6 × 5, con transiciones entre estados de ejecución; un reinicio coloca los personajes directamente en el estado inicial. El segundo robot utiliza un color distinto y los personajes que comparten casilla se desplazan visualmente para distinguirlos. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
+
+Las dos ilustraciones de `web/assets/` se generaron para este proyecto con ImageGen: `atlas.png` tiene transparencia y `world.png` es el entorno pixel art. El build incorpora sus bytes como recursos binarios del Worker y conserva sus tipos MIME; el servidor local sirve los mismos archivos. Verificar el empaquetado con `npm run build` y después `node tests/assets.mjs`. El motor Java, los evaluadores, los borradores de sesión y el contrato de persistencia se conservan.
+
 ## Arquitectura técnica
 
 | Capa | Tecnología | Responsabilidad |
 | --- | --- | --- |
 | Interfaz | HTML semántico, CSS adaptable y JavaScript sin framework | Editor, bloques ordenables, mapa, inspector, pistas y navegación |
+| Aventura visual | `web/journey.js`, sprites PNG y transiciones CSS | Camino por capítulos, personajes 2D y HUD conectado a la traza |
 | Motor educativo | Analizador e intérprete propios en JavaScript | Interpretar el subconjunto de Java, verificar operaciones y generar estados de ejecución |
 | Contenido y evaluación | Datos y funciones en `web/lessons.js` | Definir las 90 misiones, sus estados iniciales, soluciones de referencia y objetivos |
 | Exportación | Generador de código Java en `web/export.js` | Construir `Mision.java`, con las clases del alumno y la API del robot |
@@ -67,6 +86,8 @@ robotica-java/
     ├── index.html             # Estructura y controles accesibles
     ├── styles.css             # Diseño de escritorio y móvil
     ├── app.js                 # Interacciones, reproducción y sincronización
+    ├── journey.js             # Camino de niveles y representación de Atlas
+    ├── assets/                # Robot transparente y entorno pixel art
     ├── engine.js              # Parser, ámbitos, objetos e intérprete
     ├── lessons.js             # Capítulos, misiones y evaluación
     └── export.js              # Código Java completo para descargar

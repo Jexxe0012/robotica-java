@@ -38,3 +38,5 @@ jobs:
         run: npm run test:java
       - name: Construir el Worker
         run: npm run build
+      - name: Verificar recursos pixel art y respuestas HTTP
+        run: node tests/assets.mjs

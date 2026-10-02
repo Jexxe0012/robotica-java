@@ -1,5 +1,6 @@
 .sites-runtime/
 *.tar.gz
 *.png
+!web/assets/*.png
 node_modules/
 dist/
