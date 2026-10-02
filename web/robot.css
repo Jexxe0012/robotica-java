@@ -1,0 +1,40 @@
+/* Atlas CRT: 2 × 2 sheet, rows [south, north] / [east, west].
+   The engine owns orientation: east=0, south=1, west=2, north=3. */
+.robot-sprite {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: url('assets/atlas-directions.png') 0 100% / 200% 200% no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 0 #142d2940);
+}
+/* Optical alignment from alpha >=128 bounds in each 627px cell:
+   center the bodies and place all feet at 570px, with a common 519px height. */
+.robot-actor[data-dir='0'] .robot-sprite {
+  background-position: 0 100%;
+  transform: translate(-3.5%, -.3%) scale(1.02);
+}
+.robot-actor[data-dir='1'] .robot-sprite {
+  background-position: 0 0;
+  transform: translate(-1.9%, -6.7%);
+}
+.robot-actor[data-dir='2'] .robot-sprite {
+  background-position: 100% 100%;
+  transform: translate(3.4%, -.3%) scale(1.02);
+}
+.robot-actor[data-dir='3'] .robot-sprite {
+  background-position: 100% 0;
+  transform: translate(1.8%, -6.7%);
+}
+.robot-actor.helper .robot-sprite {
+  filter: hue-rotate(100deg) drop-shadow(0 4px 0 #142d2940);
+}
+.robot-actor.moving .robot-sprite { animation: walk 180ms steps(2, end) 2; }
+.atlas-portrait img {
+  width: 144px;
+  height: 144px;
+  filter: drop-shadow(0 3px 0 #152d2940);
+}
+@media (prefers-reduced-motion: reduce) {
+  .robot-actor, .robot-sprite { animation: none !important; transition: none !important; }
+}

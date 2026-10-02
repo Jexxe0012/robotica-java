@@ -26,7 +26,9 @@ Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y
 
 Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
 
-Atlas conserva su sprite transparente `web/assets/atlas.png`. Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. El mismo paisaje ambienta el mapa, el retrato de Atlas y el escenario de sus misiones. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos](docs/art-prompts.json).
+Atlas es un explorador pixel art con cabeza de monitor CRT, carcasa crema y oliva, sonrisa amarilla y núcleo de cristal. Su retrato transparente es `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene las cuatro orientaciones en una hoja 2 × 2. `web/robot.css` selecciona la vista según `robot.dir`: este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. Consulta el [diseño, referencia e integración de Atlas](docs/atlas-design.md) y sus [prompts completos](docs/atlas-prompts.json).
+
+Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. El mismo paisaje ambienta el mapa, el retrato de Atlas y el escenario de sus misiones. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos de los paisajes](docs/art-prompts.json).
 
 El build incorpora PNG y WebP como recursos binarios del Worker y conserva sus tipos MIME; el servidor local sirve los mismos archivos. Verificar el empaquetado con `npm run build` y después `node tests/assets.mjs`. Las comprobaciones incluyen nueve imágenes distintas, nueve rutas de diez puntos y las respuestas GET/HEAD. El motor Java, los evaluadores, los borradores de sesión y el contrato de persistencia se conservan.
 
@@ -94,7 +96,8 @@ robotica-java/
     ├── journey.js             # Camino de niveles y representación de Atlas
     ├── worlds.js              # Regiones, paisajes, rutas y colores del terreno
     ├── worlds.css             # Presentación de las regiones y navegación móvil
-    ├── assets/                # Robot transparente y nueve mapas WebP
+    ├── robot.css              # Sprite direccional de Atlas y movimiento reducido
+    ├── assets/                # Retrato, hoja direccional y nueve mapas WebP
     ├── engine.js              # Parser, ámbitos, objetos e intérprete
     ├── lessons.js             # Capítulos, misiones y evaluación
     └── export.js              # Código Java completo para descargar

@@ -25,7 +25,9 @@ for(const [url,file,type] of [
  ['/journey.js', 'web/journey.js', 'text/javascript'],
  ['/worlds.js', 'web/worlds.js', 'text/javascript'],
  ['/worlds.css', 'web/worlds.css', 'text/css'],
- ['/assets/atlas.png', 'web/assets/atlas.png', 'image/png'],
+ ['/robot.css', 'web/robot.css', 'text/css'],
+ ['/assets/atlas-crt.png', 'web/assets/atlas-crt.png', 'image/png'],
+ ['/assets/atlas-directions.png', 'web/assets/atlas-directions.png', 'image/png'],
  ...regions.map(r=>['/'+r.image,'web/'+r.image,'image/webp'])
 ]){
  const response=await worker.fetch(new Request('https://example.test'+url),{});
@@ -39,6 +41,6 @@ for(const [url,file,type] of [
 for(const path of ['/missing.png','/assets/../../package.json','/constructor','/__proto__']){
  assert.equal((await worker.fetch(new Request('https://example.test'+path),{})).status,404,path);
 }
-assert.equal((await worker.fetch(new Request('https://example.test/assets/atlas.png',{method:'POST'}),{})).status,405);
+assert.equal((await worker.fetch(new Request('https://example.test/assets/atlas-crt.png',{method:'POST'}),{})).status,405);
 assert.equal((await worker.fetch(new Request('https://example.test/api/progress'),{})).status,401);
 console.log('PASS: nine unique landscapes and routes; packaged assets, MIME types, HEAD, missing files and API authentication.');
