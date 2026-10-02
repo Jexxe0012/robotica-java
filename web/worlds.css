@@ -1,0 +1,54 @@
+/* Chapter landscapes are distinct assets, with matching terrain in each mission. */
+.map-stage{background:#1f3341;border-color:var(--region-accent);min-height:600px}
+.map-landscape{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;image-rendering:pixelated;z-index:-2}
+.map-stage::before{background:linear-gradient(180deg,#091728c9,transparent 28%,transparent 74%,#0a182480)}
+.map-caption{max-width:calc(100% - 48px)}
+.map-caption .eyebrow{color:#e4f1e9;font-size:.875rem}
+.map-caption h2{color:#fff8df;text-shadow:0 2px 0 #152537,2px 0 0 #152537}
+.chapter-button{border-top-color:var(--chapter-accent)}
+.chapter-button.active{border-color:var(--chapter-accent);background:#293c4c}
+.chapter-button.active .chapter-number{color:var(--chapter-accent)}
+.path-border{stroke:#18232d;stroke-width:1.8;stroke-opacity:.78}
+.path-line{stroke:#f7e3b2;stroke-width:.9;stroke-dasharray:1.1 1.6;stroke-linecap:square}
+.path-line.done{stroke:#90f0c7;stroke-dasharray:none}
+.map-node{width:52px;height:52px;background:#233b46;border-color:var(--region-accent);box-shadow:0 4px 0 #11212a,0 0 0 3px #0b172447}
+.map-node:hover{background:#42606a}
+.map-node.completed{background:#28624f;border-color:#9becbf}
+.map-node.selected{background:#f5ca72;border-color:#fff3ba;box-shadow:0 4px 0 #8a6d39,0 0 0 4px #f8ce7355}
+.node-label{display:none;background:#102331eb;border-color:var(--region-accent);font-size:.875rem;max-width:160px}
+.map-node:hover .node-label,.map-node:focus-visible .node-label,.map-node.selected .node-label{display:block}
+.map-node[data-label-above=true] .node-label{top:auto;bottom:calc(100% + 8px)}
+.map-node[data-label-edge=left] .node-label{left:0;transform:none}
+.map-node[data-label-edge=right] .node-label{left:auto;right:0;transform:none}
+.map-key{background:#102331eb;font-size:.875rem}
+.map-help{display:flex;flex-wrap:wrap;gap:4px 10px;line-height:1.6}
+#map-description{color:#d3e2de}
+.atlas-portrait{background:linear-gradient(#14233155,#14233188),var(--region-image) center/cover;border-color:var(--region-accent);image-rendering:pixelated}
+.stage-frame{background:linear-gradient(#0e203682,#0e2036ba),var(--region-image) center/cover}
+.world{background:#263b48 var(--region-image) center/cover;border-color:var(--region-accent)}
+.world-grid{background:#17283855}
+.cell{background:var(--terrain-0);border-color:var(--terrain-2)}
+.cell:nth-child(2n){background:var(--terrain-1)}
+.cell.blocked{background:#1c3445f0}
+.cell.target{background:#62b596b8;outline-color:#edffd7}
+.cell.charger{background:#529cbdc9}
+.world-item{filter:drop-shadow(0 1px 1px #16202e)}
+@media(min-width:1600px){.map-stage{min-height:660px}}
+@media(max-width:1150px){.map-stage{min-height:600px}}
+@media(max-width:850px){
+  .chapters{display:flex;overflow-x:auto;gap:8px;padding:4px 3px 12px;scrollbar-color:var(--region-accent) #172b36;scroll-padding-inline:3px}
+  .chapter-button{flex:0 0 156px;min-height:70px}
+  .chapter-name{overflow-wrap:normal}
+  .map-stage{min-height:570px}
+}
+@media(max-width:550px){
+  .map-stage{min-height:530px}
+  .map-landscape{object-position:65% top}
+  .map-caption{max-width:calc(100% - 30px)}
+  .map-caption h2{font-size:1.25rem}
+  .map-caption .eyebrow{font-size:.75rem}
+  .map-node{width:44px;height:44px;font-size:1rem}
+  .map-node.selected .node-label,.map-node:focus-visible .node-label{max-width:105px;width:105px;font-size:.75rem}
+  .map-node:hover:not(.selected):not(:focus-visible) .node-label{display:none}
+  .map-key{font-size:.75rem}
+}

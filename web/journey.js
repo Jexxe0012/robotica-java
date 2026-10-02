@@ -3,10 +3,9 @@
 (() => {
   const $ = id => document.getElementById(id);
   const {levels, chapters} = JavaCourse;
-  const worlds = ['Pradera de arranque', 'Valle de los datos', 'Cruce de decisiones', 'Bosque de los bucles', 'Taller de métodos', 'Ciudad de los objetos', 'Fortaleza de la POO', 'Archipiélago de listas', 'La gran expedición'];
+  const worlds = AtlasWorlds;
   const modes = {predict:'Leer y predecir', order:'Ordenar instrucciones', fix:'Encontrar y corregir', write:'Programar', project:'Proyecto'};
-  const points = [[12,78],[27,70],[17,49],[32,35],[48,45],[51,65],[68,72],[82,53],[73,30],[87,22]];
-  let current, completed, choose, pause, badgeTimer;
+  let current, completed, choose, pause, badgeTimer, regionIndex = -1;
   const actors = new Map();
   function el(tag, text, className) {
     const node = document.createElement(tag);
@@ -36,6 +35,17 @@
   function route(mission, finished) {
     current = mission;
     completed = finished;
+    const region = worlds[current.chapter], points = region.points;
+    if (regionIndex !== current.chapter) {
+      regionIndex = current.chapter;
+      document.body.dataset.region = region.id;
+      document.body.style.setProperty('--region-image', `url("${region.image}")`);
+      document.body.style.setProperty('--region-accent', region.accent);
+      region.ground.forEach((color, i) => document.body.style.setProperty('--terrain-'+i, color));
+      $('map-landscape').src = region.image;
+      $('map-landscape').alt = region.alt;
+      $('map-description').textContent = region.description;
+    }
     $('chapters').replaceChildren();
     chapters.forEach((c, i) => {
       const missions = levels.filter(m => m.chapter === i);
@@ -43,6 +53,8 @@
       button.type = 'button';
       button.dataset.chapter = i;
       button.dataset.poo = String(i === 5 || i === 6);
+      button.style.setProperty('--chapter-accent', worlds[i].accent);
+      button.title = worlds[i].title;
       button.setAttribute('aria-pressed', String(i === current.chapter));
       button.setAttribute('aria-label', `Capítulo ${i+1}: ${c.title}, ${missions.filter(m => completed.has(m.id)).length} de 10 completadas`);
       const label = el('span', c.title, 'chapter-name');
@@ -52,7 +64,7 @@
       $('chapters').append(button);
     });
     const missions = levels.filter(m => m.chapter === current.chapter);
-    $('map-title').textContent = worlds[current.chapter];
+    $('map-title').textContent = region.title;
     $('map-kicker').textContent = `CAPÍTULO ${String(current.chapter+1).padStart(2,'0')} · ${chapters[current.chapter].title.toUpperCase()}`;
     $('map-progress').textContent = `${missions.filter(m => completed.has(m.id)).length} de 10 misiones completadas`;
     $('map-stage').dataset.biome = current.chapter;
@@ -72,6 +84,8 @@
       const button = el('button', undefined, 'map-node' + (done ? ' completed' : '') + (selected ? ' selected' : '') + (m.mode === 'project' ? ' project' : ''));
       button.type = 'button';
       button.dataset.mission = m.id;
+      button.dataset.labelAbove = String(points[i][1] >= 74);
+      button.dataset.labelEdge = points[i][0] < 20 ? 'left' : points[i][0] > 80 ? 'right' : '';
       button.style.left = points[i][0] + '%';
       button.style.top = points[i][1] + '%';
       button.setAttribute('aria-pressed', String(selected));
@@ -95,7 +109,7 @@
     $('completed-total').textContent = `${completed.size} / 90`;
     $('course-progress').value = completed.size;
     $('progress-label').textContent = `${completed.size} misiones completadas`;
-    $('world-heading').textContent = worlds[current.chapter];
+    $('world-heading').textContent = region.title;
   }
   function world(state, snap = false) {
     if (snap) {

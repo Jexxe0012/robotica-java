@@ -3,7 +3,7 @@ import path from 'node:path';
 const root=path.resolve('.'), output=path.resolve(root,'dist');
 if(path.relative(root,output)!=='dist')throw new Error('Unexpected build directory');
 await rm(output,{recursive:true,force:true});await mkdir(path.join(output,'server'),{recursive:true});await mkdir(path.join(output,'.openai'),{recursive:true});
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png'};
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp'};
 const assets={};
 async function collect(directory,prefix=''){
  for(const entry of await readdir(directory,{withFileTypes:true})){
