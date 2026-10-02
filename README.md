@@ -24,14 +24,18 @@ Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y
 
 `web/journey.js` se ocupa del mapa, del HUD y de la representación visual. Los robots se mantienen como elementos de una capa superpuesta, identificados por el ID del objeto del intérprete. Sus posiciones usan porcentajes de un tablero de 6 × 5, con transiciones entre estados de ejecución; un reinicio coloca los personajes directamente en el estado inicial. El segundo robot utiliza un color distinto y los personajes que comparten casilla se desplazan visualmente para distinguirlos. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
 
-Las dos ilustraciones de `web/assets/` se generaron para este proyecto con ImageGen: `atlas.png` tiene transparencia y `world.png` es el entorno pixel art. El build incorpora sus bytes como recursos binarios del Worker y conserva sus tipos MIME; el servidor local sirve los mismos archivos. Verificar el empaquetado con `npm run build` y después `node tests/assets.mjs`. El motor Java, los evaluadores, los borradores de sesión y el contrato de persistencia se conservan.
+Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
+
+Atlas conserva su sprite transparente `web/assets/atlas.png`. Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. El mismo paisaje ambienta el mapa, el retrato de Atlas y el escenario de sus misiones. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos](docs/art-prompts.json).
+
+El build incorpora PNG y WebP como recursos binarios del Worker y conserva sus tipos MIME; el servidor local sirve los mismos archivos. Verificar el empaquetado con `npm run build` y después `node tests/assets.mjs`. Las comprobaciones incluyen nueve imágenes distintas, nueve rutas de diez puntos y las respuestas GET/HEAD. El motor Java, los evaluadores, los borradores de sesión y el contrato de persistencia se conservan.
 
 ## Arquitectura técnica
 
 | Capa | Tecnología | Responsabilidad |
 | --- | --- | --- |
 | Interfaz | HTML semántico, CSS adaptable y JavaScript sin framework | Editor, bloques ordenables, mapa, inspector, pistas y navegación |
-| Aventura visual | `web/journey.js`, sprites PNG y transiciones CSS | Camino por capítulos, personajes 2D y HUD conectado a la traza |
+| Aventura visual | `web/journey.js`, `web/worlds.js`, PNG/WebP y transiciones CSS | Nueve regiones y rutas, personajes 2D y HUD conectado a la traza |
 | Motor educativo | Analizador e intérprete propios en JavaScript | Interpretar el subconjunto de Java, verificar operaciones y generar estados de ejecución |
 | Contenido y evaluación | Datos y funciones en `web/lessons.js` | Definir las 90 misiones, sus estados iniciales, soluciones de referencia y objetivos |
 | Exportación | Generador de código Java en `web/export.js` | Construir `Mision.java`, con las clases del alumno y la API del robot |
@@ -88,7 +92,9 @@ robotica-java/
     ├── styles.css             # Diseño de escritorio y móvil
     ├── app.js                 # Interacciones, reproducción y sincronización
     ├── journey.js             # Camino de niveles y representación de Atlas
-    ├── assets/                # Robot transparente y entorno pixel art
+    ├── worlds.js              # Regiones, paisajes, rutas y colores del terreno
+    ├── worlds.css             # Presentación de las regiones y navegación móvil
+    ├── assets/                # Robot transparente y nueve mapas WebP
     ├── engine.js              # Parser, ámbitos, objetos e intérprete
     ├── lessons.js             # Capítulos, misiones y evaluación
     └── export.js              # Código Java completo para descargar
