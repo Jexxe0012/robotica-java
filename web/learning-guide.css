@@ -1,0 +1,14 @@
+.learning-guide{margin:0 0 16px;padding:14px 15px;border:2px solid #446557;background:#101c19;box-shadow:0 4px 0 #080d10}
+.learning-guide-head{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#95ada2;font:700 .7rem var(--mono);letter-spacing:.08em}
+.learning-guide-head span:last-child{color:#d59b48}
+.learning-guide>h2{margin:8px 0 5px;color:#83d5a8;font:700 1.1rem var(--pixel);letter-spacing:.02em}
+.learning-guide>p,.learning-application p{margin:0;color:#d3dfd3;font-size:.9rem;line-height:1.55}
+.learning-application{margin-top:10px;padding:10px 11px;border-left:3px solid #d59b48;background:#0b1417}
+.learning-application h3{margin:0 0 4px;color:#f0cd82;font:700 .75rem var(--mono);letter-spacing:.04em;text-transform:uppercase}
+.learning-glossary{margin-top:10px;border-top:1px solid #344c42}
+.learning-glossary summary{padding:9px 1px 0;color:#b7a0d3;font-size:.85rem;cursor:pointer}
+.learning-glossary dl{display:grid;grid-template-columns:minmax(72px,.35fr) minmax(0,1fr);gap:0 10px;margin:8px 0 0;font-size:.82rem;line-height:1.5}
+.learning-glossary dt{padding:7px 0;border-top:1px solid #263a32;color:#f0cd82;overflow-wrap:anywhere}
+.learning-glossary dt code{font:700 .8rem var(--mono)}
+.learning-glossary dd{margin:0;padding:7px 0;border-top:1px solid #263a32;color:#c3d0c8}
+@media(max-width:550px){.learning-guide{padding:12px}.learning-guide>h2{font-size:1rem}.learning-glossary dl{grid-template-columns:minmax(62px,.34fr) minmax(0,1fr);gap:0 8px;font-size:.78rem}}
