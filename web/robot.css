@@ -6,7 +6,7 @@
   aspect-ratio: 1;
   background: url('assets/atlas-directions.png') 0 100% / 200% 200% no-repeat;
   image-rendering: pixelated;
-  filter: drop-shadow(0 4px 0 #142d2940);
+  filter: drop-shadow(0 4px 0 #080d1066);
 }
 /* Optical alignment from alpha >=128 bounds in each 627px cell:
    center the bodies and place all feet at 570px, with a common 519px height. */
@@ -27,13 +27,13 @@
   transform: translate(1.8%, -6.7%);
 }
 .robot-actor.helper .robot-sprite {
-  filter: hue-rotate(100deg) drop-shadow(0 4px 0 #142d2940);
+  filter: hue-rotate(100deg) drop-shadow(0 4px 0 #080d1066);
 }
 .robot-actor.moving .robot-sprite { animation: walk 180ms steps(2, end) 2; }
 .atlas-portrait img {
   width: 144px;
   height: 144px;
-  filter: drop-shadow(0 3px 0 #152d2940);
+  filter: drop-shadow(0 3px 0 #080d1066);
 }
 @media (prefers-reduced-motion: reduce) {
   .robot-actor, .robot-sprite { animation: none !important; transition: none !important; }
