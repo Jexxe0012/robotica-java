@@ -1,0 +1,7 @@
+.phaser-world{position:absolute;inset:0;z-index:2;overflow:hidden;touch-action:none;image-rendering:pixelated}
+.phaser-world canvas{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair;touch-action:none}
+.phaser-world canvas:focus-visible{outline:3px solid var(--gold);outline-offset:-5px}
+.world-grid-accessible{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.phaser-tag{display:inline-block;padding:3px 6px;border:1px solid #6dbb91;background:#10221c;color:#83d5a8;font:700 .7rem var(--mono);letter-spacing:.08em;vertical-align:middle}
+.world-meta{align-items:center;gap:8px;flex-wrap:wrap}
+@media(max-width:550px){.world-meta{font-size:.75rem}.phaser-tag{font-size:.65rem}}

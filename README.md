@@ -6,7 +6,7 @@ Aventura educativa en español con **90 misiones**, construida a partir de la pr
 - **Despliegue privado:** [Abrir Robótica Java](https://huerto-java-josue.sandobaljosue16.chatgpt.site).
 - **Comprobaciones automáticas:** [GitHub Actions](https://github.com/Jexxe0012/robotica-java/actions).
 
-El proyecto enseña Java, mientras que la aplicación web y el intérprete están implementados en JavaScript. Los ejercicios descargables se ejecutan con un JDK real. No requiere Minecraft ni un servidor de Minecraft.
+El proyecto enseña Java, mientras que la aplicación web y el intérprete están implementados en JavaScript. Phaser 4 renderiza el tablero 2D; el intérprete Java sigue determinando los movimientos y el resultado de cada misión. Los ejercicios descargables se ejecutan con un JDK real. No requiere Minecraft ni un servidor de Minecraft.
 
 ## Aventura de Atlas
 
@@ -22,7 +22,9 @@ npm run dev
 
 Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y una misión puede abrirse directamente con `#m51`. Escape o **Mapa de capítulos** vuelve al camino y pausa la ejecución. **Pausar**, **Continuar**, **Paso a paso** y **Reiniciar prueba** permiten observar los cambios. La opción **Coordenadas** muestra las posiciones sin recargar la escena.
 
-`web/journey.js` se ocupa del mapa, del HUD y de la representación visual. Los robots se mantienen como elementos de una capa superpuesta, identificados por el ID del objeto del intérprete. Sus posiciones usan porcentajes de un tablero de 6 × 5, con transiciones entre estados de ejecución; un reinicio coloca los personajes directamente en el estado inicial. El segundo robot utiliza un color distinto y los personajes que comparten casilla se desplazan visualmente para distinguirlos. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
+`web/journey.js` se ocupa del camino de capítulos, la navegación, el HUD y la lista de casillas accesible. `web/phaser-world.js` crea una escena Phaser independiente para la misión: dibuja el terreno y los obstáculos como mosaicos, marca destinos y estaciones, y anima el sprite de Atlas entre posiciones. El tablero se puede inspeccionar con el ratón, el tacto o las flechas del teclado. El motor entrega instantáneas del estado después de cada instrucción; Phaser solo las presenta y nunca ejecuta Java. Un reinicio coloca a los personajes en el estado inicial. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
+
+El paquete `phaser` se fija en `package-lock.json`; el build publica su distribución minificada junto con el Worker, sin descargarla desde un CDN al abrir el juego. Para desarrollo local, `scripts/dev.mjs` sirve esa distribución desde `node_modules`. Se conserva la licencia MIT de Phaser en `web/assets/PHASER-LICENSE.txt`.
 
 Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
 
