@@ -15,6 +15,8 @@ async function collect(directory,prefix=''){
  }
 }
 await collect('web');
+const phaser=await readFile('node_modules/phaser/dist/phaser.min.js','utf8');
+assets['/phaser.js']={body:phaser,type:'text/javascript; charset=utf-8',binary:false};
 const api=await readFile('server/api.js','utf8');
 const worker=`${api}\nconst ASSETS=${JSON.stringify(assets)};\nconst IDS=new Set(Array.from({length:90},(_,i)=>'m'+String(i+1).padStart(2,'0')));\nexport default {async fetch(request,env){const url=new URL(request.url);if(url.pathname==='/api/progress')return progressAPI(request,env,IDS);if(request.method!=='GET'&&request.method!=='HEAD')return new Response('Method not allowed',{status:405});const key=url.pathname==='/'?'/index.html':url.pathname;const asset=Object.hasOwn(ASSETS,key)?ASSETS[key]:undefined;if(asset===undefined)return new Response('Not found',{status:404});const body=request.method==='HEAD'?null:asset.binary?Uint8Array.from(atob(asset.body),c=>c.charCodeAt(0)):asset.body;return new Response(body,{headers:{'content-type':asset.type,'cache-control':'no-cache','x-content-type-options':'nosniff','referrer-policy':'same-origin'}});}};\n`;
 await writeFile(path.join(output,'server/index.js'),worker);await copyFile('.openai/hosting.json',path.join(output,'.openai/hosting.json'));

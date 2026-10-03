@@ -6,7 +6,6 @@
   const worlds = AtlasWorlds;
   const modes = {predict:'Leer y predecir', order:'Ordenar instrucciones', fix:'Encontrar y corregir', write:'Programar', project:'Proyecto'};
   let current, completed, choose, pause, badgeTimer, regionIndex = -1;
-  const actors = new Map();
   function el(tag, text, className) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -21,6 +20,8 @@
     document.querySelector('.skip-link').href = name === 'map' ? '#journey-title' : '#mission-title';
     if (focus) $(name === 'map' ? 'journey-title' : 'mission-title').focus({preventScroll:true});
     window.scrollTo({top:0, behavior:'instant'});
+    if(name==='mission') requestAnimationFrame(()=>globalThis.AtlasPhaserWorld?.setActive(true));
+    else globalThis.AtlasPhaserWorld?.setActive(false);
   }
   function openMap() {
     pause();
@@ -115,54 +116,21 @@
     if (snap) {
       clearTimeout(badgeTimer);
       $('mission-badge').hidden = true;
-      actors.clear();
-      $('robot-layer').replaceChildren();
-    }
-    if (!$('world-grid').children.length) {
-      for (let i = 0; i < 30; i++) {
-        const cell = el('div', undefined, 'cell');
-        cell.setAttribute('role','listitem');
-        $('world-grid').append(cell);
-      }
     }
     const robots = state.objects.filter(o => o.robot);
+    $('world-grid').replaceChildren();
     for (let y = 0; y < 5; y++) for (let x = 0; x < 6; x++) {
       const occupants = robots.filter(o => o.robot.x === x && o.robot.y === y);
       const box = state.world.boxes.find(b => b[0] === x && b[1] === y && b[2] > 0);
       const wall = state.world.walls.some(w => w[0] === x && w[1] === y);
       const target = state.world.targets.some(t => t[0] === x && t[1] === y);
       const charger = state.world.chargers.some(c => c[0] === x && c[1] === y);
-      const cell = $('world-grid').children[y*6+x];
-      cell.className = 'cell' + (wall ? ' blocked' : '') + (target ? ' target' : '') + (charger ? ' charger' : '');
-      const details = [`Casilla ${x}, ${y}`, wall?'obstáculo':'', target?'destino':'', charger?'recarga':'', box?`${box[2]} cajas`:'', ...occupants.map(o => `${o.robot.name}, mirando ${['este','sur','oeste','norte'][o.robot.dir]}`)].filter(Boolean).join('; ');
-      cell.setAttribute('aria-label', details);
-      cell.title = details;
-      cell.replaceChildren(el('span', `${x},${y}`, 'cell-coordinate'));
-      const symbol = wall ? '▥' : box ? '▣' : target ? '◎' : charger ? 'ϟ' : null;
-      if (symbol) cell.append(el('span', symbol, 'world-item'));
-      if (box) cell.append(el('span', '×'+box[2], 'cell-count'));
+      const details = [`Casilla (${x}, ${y})`, wall?'obstáculo':'', target?'destino':'', charger?'estación de recarga':'', box?`${box[2]} caja${box[2]===1?'':'s'}`:'', ...occupants.map(o => `${o.robot.name}, mirando ${['este','sur','oeste','norte'][o.robot.dir]}`)].filter(Boolean).join(' · ');
+      const cell=el('span', details);
+      cell.setAttribute('role','listitem');
+      $('world-grid').append(cell);
     }
-    for (const [id, actor] of actors) if (!robots.some(o => o.id === id)) { actor.remove(); actors.delete(id); }
-    for (const [index, object] of robots.entries()) {
-      const robot = object.robot;
-      let actor = actors.get(object.id);
-      const overlap = robots.filter(o => o.robot.x === robot.x && o.robot.y === robot.y);
-      const offset = overlap.length > 1 ? (overlap.findIndex(o => o.id === object.id) - (overlap.length-1)/2) * 5 : 0;
-      if (!actor) {
-        actor = el('div', undefined, 'robot-actor snap' + (index ? ' helper' : ''));
-        actor.dataset.objectId = object.id;
-        const sprite = el('span', undefined, 'robot-sprite');
-        sprite.setAttribute('aria-hidden', 'true');
-        actor.append(sprite, el('span', '', 'robot-label'));
-        $('robot-layer').append(actor); actors.set(object.id, actor);
-        requestAnimationFrame(() => actor.classList.remove('snap'));
-      }
-      const left = ((robot.x+.5)/6*100 + offset) + '%', top = ((robot.y+.5)/5*100) + '%';
-      const moved = actor.style.left && (actor.style.left !== left || actor.style.top !== top);
-      actor.classList.toggle('moving', !!moved && !snap);
-      actor.style.left = left; actor.style.top = top; actor.dataset.dir = robot.dir;
-      actor.querySelector('.robot-label').textContent = `${robot.name} ${['→','↓','←','↑'][robot.dir]}`;
-    }
+    globalThis.AtlasPhaserWorld?.setState(state,snap);
     const atlas = robots.find(o => o.robot.name === 'Atlas')?.robot ?? robots[0]?.robot;
     $('hud-energy').textContent = atlas?.energy ?? '—';
     $('hud-cargo').textContent = atlas?.cargo ?? '—';
@@ -184,7 +152,7 @@
     $('brand-home').addEventListener('click', event => { event.preventDefault(); openMap(); });
     $('previous-chapter').addEventListener('click', () => chapter(current.chapter-1));
     $('next-chapter').addEventListener('click', () => chapter(current.chapter+1));
-    $('show-coordinates').addEventListener('change', event => $('world').classList.toggle('coordinates', event.target.checked));
+    document.addEventListener('atlas:tile-inspect',event=>{$('world-status').textContent=event.detail.summary;});
     window.addEventListener('keydown', event => { if (event.key === 'Escape' && document.body.dataset.view === 'mission') openMap(); });
     window.addEventListener('hashchange', () => {
       const mission = levels.find(m => '#'+m.id === location.hash);
