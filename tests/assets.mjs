@@ -26,6 +26,9 @@ for(const [url,file,type] of [
  ['/worlds.js', 'web/worlds.js', 'text/javascript'],
  ['/worlds.css', 'web/worlds.css', 'text/css'],
  ['/robot.css', 'web/robot.css', 'text/css'],
+ ['/retro.css', 'web/retro.css', 'text/css'],
+ ['/assets/fonts/pixelify-sans.ttf', 'web/assets/fonts/pixelify-sans.ttf', 'font/ttf'],
+ ['/assets/fonts/OFL.txt', 'web/assets/fonts/OFL.txt', 'text/plain'],
  ['/assets/atlas-crt.png', 'web/assets/atlas-crt.png', 'image/png'],
  ['/assets/atlas-directions.png', 'web/assets/atlas-directions.png', 'image/png'],
  ...regions.map(r=>['/'+r.image,'web/'+r.image,'image/webp'])

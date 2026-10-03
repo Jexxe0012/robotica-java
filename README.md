@@ -26,6 +26,8 @@ Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y
 
 Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
 
+La interfaz utiliza una paleta de fantasía oscura: negro verdoso, bosque, jade y ámbar, con acentos propios por región. `web/retro.css` añade tipografía pixel, marcos con relieve, progreso segmentado y textura estática sobre los paisajes. Las superficies de los controles son oscuras; los colores brillantes se reservan para texto, foco y estado. Las lecciones y el código usan tipografías de lectura y no llevan filtros ni líneas de pantalla. La fuente variable Pixelify Sans se sirve desde `web/assets/fonts/`, junto con su licencia OFL, sin depender de una descarga externa al abrir el juego. Consulta la [paleta y los criterios de presentación](docs/retro-theme.md).
+
 Atlas es un explorador pixel art con cabeza de monitor CRT, carcasa crema y oliva, sonrisa amarilla y núcleo de cristal. Su retrato transparente es `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene las cuatro orientaciones en una hoja 2 × 2. `web/robot.css` selecciona la vista según `robot.dir`: este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. Consulta el [diseño, referencia e integración de Atlas](docs/atlas-design.md) y sus [prompts completos](docs/atlas-prompts.json).
 
 Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. El mismo paisaje ambienta el mapa, el retrato de Atlas y el escenario de sus misiones. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos de los paisajes](docs/art-prompts.json).
@@ -97,6 +99,7 @@ robotica-java/
     ├── worlds.js              # Regiones, paisajes, rutas y colores del terreno
     ├── worlds.css             # Presentación de las regiones y navegación móvil
     ├── robot.css              # Sprite direccional de Atlas y movimiento reducido
+    ├── retro.css              # Tipografía pixel, marcos, texturas y estados oscuros
     ├── assets/                # Retrato, hoja direccional y nueve mapas WebP
     ├── engine.js              # Parser, ámbitos, objetos e intérprete
     ├── lessons.js             # Capítulos, misiones y evaluación

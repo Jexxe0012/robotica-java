@@ -1,0 +1,195 @@
+/* Dark fantasy interface. Texture belongs to scenery; lesson text stays clear. */
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('assets/fonts/pixelify-sans.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+:root {
+  --pixel: 'Pixelify Sans', 'Courier New', monospace;
+  --shadow: #05090b;
+  --raised: #1b3029;
+  --amber-surface: #32261a;
+  --control-edge: #527865;
+  --cut-corner: polygon(0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0,
+    calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px));
+}
+body {
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(0deg, #17302725 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(90deg, #17302725 0 1px, transparent 1px 8px);
+}
+::selection { background: #345b47; color: #e0e9e2; }
+button, input, textarea, summary { border-radius: 0; }
+button:disabled { opacity: .62; }
+button:focus-visible, a:focus-visible, input:focus-visible,
+textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); }
+h1, h2, .brand, .map-node, .chapter-number, .mission-badge {
+  letter-spacing: .015em;
+  text-shadow: 2px 2px 0 var(--shadow);
+}
+h1 { font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.15; }
+.header {
+  border-bottom: 2px solid var(--line);
+  box-shadow: 0 4px 0 var(--shadow), 0 6px 0 #1b3029;
+  background: var(--nav);
+}
+.brand { font-size: 1.25rem; line-height: 1.1; }
+.brand small { font-size: .75rem; line-height: 1.4; letter-spacing: .06em; }
+.brand-mark {
+  width: 46px;
+  height: 46px;
+  color: var(--mint);
+  border-color: var(--control-edge);
+  background: #10251e;
+  box-shadow: inset 2px 2px 0 #345b47, inset -2px -2px 0 #080d10, 3px 3px 0 var(--shadow);
+  font-family: var(--pixel);
+  font-size: 1.5rem;
+}
+.progress-hud { padding: 6px 10px; border: 1px solid #604d30; background: #1b1b15; }
+.button, .chapter-button, .map-node, .parsons-buttons button {
+  box-shadow: inset 2px 2px 0 #71917a33, inset -2px -2px 0 #05090b66, 0 4px 0 var(--shadow);
+}
+.button { font-family: var(--pixel); font-size: 1.125rem; line-height: 1.2; }
+.button.primary {
+  background: var(--amber-surface);
+  color: var(--gold);
+  border-color: #a57839;
+  box-shadow: inset 2px 2px 0 #d59b4833, inset -2px -2px 0 #05090b66, 0 4px 0 var(--shadow);
+}
+.button.primary:hover:not(:disabled) { background: #47341e; }
+.button.secondary { border-color: var(--control-edge); background: var(--raised); }
+.button.subtle { background: #101c19; color: var(--muted); }
+.button:hover:not(:disabled) { filter: none; transform: translateY(-1px); border-color: var(--mint); }
+.button.primary:hover:not(:disabled) { border-color: var(--gold); }
+.button:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 2px 2px 0 #05090b66; }
+progress { height: 12px; border: 2px solid #446557; background: #080d10; }
+progress::-webkit-progress-bar { background: #080d10; }
+progress::-webkit-progress-value {
+  background: repeating-linear-gradient(90deg, var(--mint) 0 7px, #274333 7px 9px);
+}
+progress::-moz-progress-bar {
+  background: repeating-linear-gradient(90deg, var(--mint) 0 7px, #274333 7px 9px);
+}
+.chapter-button { position: relative; border-top-width: 3px; min-height: 72px; }
+.chapter-button:hover:not(:disabled) { background: #233e30; color: var(--ink); }
+.chapter-button.active { background: #20392d; box-shadow: inset 0 -4px 0 var(--chapter-accent), 0 4px 0 var(--shadow); }
+.chapter-number { font-size: 1.625rem; line-height: 1; }
+.chapter-name { overflow-wrap: normal; hyphens: auto; }
+.chapter-count { font-size: .75rem; margin-top: 7px; }
+.map-stage, .quest-card, .world-panel, .program-panel {
+  border-color: var(--line);
+  box-shadow: 0 5px 0 var(--shadow), 0 0 0 1px #080d10, inset 0 0 0 3px #20372b;
+}
+.map-stage { border: 4px solid #3d5545; }
+.map-stage::before {
+  background: linear-gradient(180deg, #080d10dc, #080d1030 32%, #080d1020 65%, #080d10bb);
+}
+.map-stage::after, .atlas-portrait::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, #03090725 0 1px, transparent 1px 4px);
+}
+.map-stage::after { z-index: 0; }
+.map-caption { z-index: 3; }
+.map-caption h2 { font-size: clamp(1.6rem, 2.5vw, 2.1rem); color: var(--ink); line-height: 1.12; }
+.map-caption .eyebrow { color: var(--region-accent); }
+.map-caption>span:last-child { color: var(--muted); }
+.path-border { stroke: #080d10; stroke-width: 2.6; stroke-opacity: .95; stroke-linecap: square; stroke-linejoin: miter; }
+.path-line { stroke: #b6884b; stroke-width: .8; stroke-dasharray: .8 1.6; stroke-linecap: square; }
+.path-line.done { stroke: var(--mint); }
+.map-node { background: #172b22; color: var(--ink); border-color: #65816b; font-size: 1.5rem; }
+.map-node.completed { background: #1b3f2e; border-color: var(--mint); color: var(--mint); }
+.map-node.selected {
+  background: var(--amber-surface);
+  color: var(--gold);
+  border-color: var(--gold);
+  box-shadow: inset 2px 2px 0 #d59b4833, 0 4px 0 var(--shadow), 0 0 0 4px #080d10b3;
+}
+.map-node.selected::before {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  left: calc(50% - 4px);
+  top: -15px;
+  background: var(--gold);
+  box-shadow: 0 -4px 0 -2px var(--gold);
+}
+.map-node.selected .node-label { background: #231e16; color: var(--gold); border-color: #a57839; }
+.node-label { box-shadow: 2px 2px 0 var(--shadow); text-shadow: none; }
+.map-key { color: var(--muted); border: 1px solid var(--line); }
+.quest-card { position: relative; background: #13221f; border-top: 4px solid #5a714e; }
+.quest-card h2 { font-size: 1.75rem; line-height: 1.1; }
+.atlas-portrait {
+  min-height: 144px;
+  clip-path: var(--cut-corner);
+  border: 2px solid #42634e;
+  background: linear-gradient(#080d1099, #080d10bb), var(--region-image) center/cover;
+  box-shadow: inset 0 0 0 3px #080d10;
+}
+.atlas-portrait img { z-index: 1; }
+.portrait-label { z-index: 2; font: 700 1rem var(--pixel); background: #0b1417dd; padding: 2px 6px; }
+.mode-label { background: #182c24; border-color: #446557; color: var(--mint); }
+.quest-objective { border-left-width: 2px; background: #101c19; padding: 10px 12px; }
+.world-panel { border-top: 4px solid #5a714e; }
+.panel-title { background: #16291f; }
+.panel-title h2 { font: 600 1.375rem/1.2 var(--pixel); }
+.game-hud { background: #0b1417; padding-block: 13px; gap: 12px; }
+.game-hud>span { border-left: 2px solid #345642; padding-left: 9px; }
+.game-hud strong { font: 600 1.375rem var(--pixel); }
+.stage-frame { background: linear-gradient(#080d10b8, #080d10dc), var(--region-image) center/cover; }
+.world { border-color: #55705b; box-shadow: 0 4px 0 var(--shadow), 0 0 0 2px #080d10; }
+.cell.blocked { box-shadow: inset 0 4px #4b6655, inset -4px -4px #080d10; }
+.cell.target { background: #214e35cc; outline-color: #86bd73; }
+.cell.charger { background: #193e48dd; }
+.cell.target .world-item { color: var(--mint); text-shadow: 0 3px #0b2217; }
+.cell.charger .world-item { color: #83b6c0; text-shadow: 0 3px #10232c; }
+.world-item { color: var(--gold); text-shadow: 2px 3px #251a10; }
+.robot-label { background: #080d10ed; border-color: #446557; color: var(--ink); }
+.mission-badge { background: #162e22; color: var(--mint); border-color: var(--mint); box-shadow: 0 6px 0 var(--shadow), 0 0 0 100vmax #080d1066; }
+.trace { background: #0f1e18; border-top-width: 2px; }
+.inspector[open], .console[open] { background: #101c19; }
+.object-card { border-left: 3px solid var(--mint); background: #192e24; }
+.variable { background: #243525; border-bottom: 1px solid #527865; }
+.program-panel { background: #0b1417; border-color: #53654f; }
+.program-panel .panel-title { background: #1b2a24; }
+.code-line.active { background: #6dbb911a; }
+.code-editor { caret-color: var(--mint); }
+.answer { border: 2px solid var(--line); background: #13221f; }
+.answer:hover { border-color: var(--control-edge); background: #1b3029; }
+.answer:has(input:checked) { background: #203c2c; border-color: var(--mint); box-shadow: inset 3px 0 var(--mint); }
+.answer:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 3px; }
+.parsons-row { background: #182c24; border-color: var(--line); box-shadow: 2px 2px 0 var(--shadow); }
+.parsons-buttons button { background: #233e30; color: var(--mint); border-color: var(--control-edge); min-width: 36px; }
+.hint { background: #282319; color: var(--gold); }
+.reference, .transfer { background: #101c19; border-width: 2px; }
+.reference summary, .transfer summary { color: var(--muted); }
+.feedback { background: #142e21; border-color: var(--mint); box-shadow: 4px 4px 0 var(--shadow); }
+.feedback.error { background: #321f22; border-color: #e38d79; }
+.feedback.error h2 { color: #e38d79; }
+.footer { border-top: 1px solid #2f493b; margin-top: 28px; }
+@media(max-width:1150px) and (min-width:851px) {
+  .chapters { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media(max-width:550px) {
+  .brand { font-size: 1.125rem; }
+  .brand-mark { width: 38px; height: 38px; }
+  .journey-heading h1, .mission-top h1 { font-size: 1.8rem; }
+  .map-caption h2 { font-size: 1.6rem; }
+  .map-node { font-size: 1.25rem; }
+  .quest-card h2 { font-size: 1.5rem; }
+  .atlas-portrait { min-height: 140px; }
+  .button { font-size: 1.0625rem; }
+  .game-hud { gap: 5px; }
+  .game-hud>span { padding-left: 5px; }
+  .game-hud strong { font-size: 1.125rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .button:hover:not(:disabled), .button:active:not(:disabled) { transform: none; }
+}

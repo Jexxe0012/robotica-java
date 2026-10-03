@@ -3,14 +3,14 @@ import path from 'node:path';
 const root=path.resolve('.'), output=path.resolve(root,'dist');
 if(path.relative(root,output)!=='dist')throw new Error('Unexpected build directory');
 await rm(output,{recursive:true,force:true});await mkdir(path.join(output,'server'),{recursive:true});await mkdir(path.join(output,'.openai'),{recursive:true});
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp'};
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp','.ttf':'font/ttf','.txt':'text/plain; charset=utf-8'};
 const assets={};
 async function collect(directory,prefix=''){
  for(const entry of await readdir(directory,{withFileTypes:true})){
   const filename=path.join(directory,entry.name),key=prefix+'/'+entry.name;
   if(entry.isDirectory()){await collect(filename,key);continue;}
   const type=types[path.extname(entry.name)];if(!entry.isFile()||!type)continue;
-  const binary=type.startsWith('image/'),data=await readFile(filename);
+  const binary=type.startsWith('image/')||type.startsWith('font/'),data=await readFile(filename);
   assets[key]={body:data.toString(binary?'base64':'utf8'),type,binary};
  }
 }
