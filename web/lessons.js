@@ -1,16 +1,16 @@
 'use strict';
 (() => {
 const chapters=[
- ['Secuencias','Leer instrucciones y seguir el estado, una línea a la vez.','Una instrucción se ejecuta después de la anterior. avanzar() sigue la orientación; este(), oeste(), norte() y sur() usan direcciones del mapa.'],
- ['Variables y tipos','Guardar datos, calcular y distinguir valores.','int guarda enteros; double decimales; boolean true/false; String texto. = asigna; + suma o concatena. La división de int descarta la parte decimal.'],
- ['Decisiones','Elegir caminos con condiciones y lógica booleana.','if ejecuta su bloque cuando la condición es true. else cubre el otro caso. && exige ambas condiciones; || al menos una; ! invierte. && y || pueden evitar evaluar el segundo operando.'],
- ['Bucles','Repetir, acumular y detectar errores de límites.','for ejecuta inicio una vez, comprueba condición, ejecuta cuerpo y actualiza contador. while comprueba antes de cada vuelta. break termina; continue pasa a la siguiente vuelta.'],
- ['Métodos','Descomponer problemas y pasar argumentos.','Un método recibe parámetros locales. return devuelve un resultado y termina la llamada. void no devuelve un valor. En este laboratorio los métodos auxiliares se declaran static y reciben sus robots como parámetros.'],
- ['POO · Objetos','Clases, constructores, referencias y composición.','Una clase describe atributos y métodos. new crea un objeto. El constructor lo inicializa. this se refiere al objeto actual. Dos variables pueden apuntar al mismo objeto; copiar una referencia no lo duplica.'],
- ['POO · Diseño','Encapsulación, herencia, polimorfismo e interfaces.','private protege el estado. Un método público puede validar cambios. extends hereda comportamiento. La implementación de un método depende del objeto real, aunque la referencia sea de la clase base o de una interfaz. implements establece un contrato.'],
- ['Arreglos y listas','Procesar varios datos y objetos.','Un arreglo tiene tamaño fijo e índices desde 0 hasta length - 1. ArrayList cambia de tamaño y ofrece add(), size() y get(). Los arreglos de referencias también pueden compartir objetos.'],
- ['Expediciones','Combinar lógica y POO en problemas completos.','Planea el algoritmo, divide responsabilidades, prueba casos y explica los resultados. Estas misiones combinan conceptos anteriores. Las últimas también resuelven problemas de consola fuera del mapa.']
-].map((c,i)=>({id:i,title:c[0],description:c[1],reference:c[2]}));
+ ['Secuencias','Leer instrucciones y seguir el estado, una línea a la vez.','Una instrucción se ejecuta después de la anterior. avanzar() sigue la orientación; este(), oeste(), norte() y sur() usan direcciones del mapa.','Instrucciones en orden','Java lee el programa desde arriba hacia abajo, una línea a la vez. Una llamada como robot.este() le pide una acción al robot; cuando termina, Java pasa a la siguiente instrucción.'],
+ ['Variables y tipos','Guardar datos, calcular y distinguir valores.','int guarda enteros; double decimales; boolean true/false; String texto. = asigna; + suma o concatena. La división de int descarta la parte decimal.','Variables: datos con nombre','Una variable es un espacio con nombre donde el programa guarda un dato para volver a usarlo. El tipo indica qué clase de dato cabe ahí: int para números enteros, double para decimales, boolean para sí/no y String para texto.'],
+ ['Decisiones','Elegir caminos con condiciones y lógica booleana.','if ejecuta su bloque cuando la condición es true. else cubre el otro caso. && exige ambas condiciones; || al menos una; ! invierte. && y || pueden evitar evaluar el segundo operando.','Decidir con preguntas','Una condición es una pregunta cuya respuesta es true (sí) o false (no). if ejecuta un bloque cuando la respuesta es sí; else permite indicar qué hacer cuando es no.'],
+ ['Bucles','Repetir, acumular y detectar errores de límites.','for ejecuta inicio una vez, comprueba condición, ejecuta cuerpo y actualiza contador. while comprueba antes de cada vuelta. break termina; continue pasa a la siguiente vuelta.','Repetir sin copiar líneas','Un bucle repite instrucciones. Un contador puede recordar cuántas vueltas van; la condición dice cuándo continuar y la actualización lo acerca al final.'],
+ ['Métodos','Descomponer problemas y pasar argumentos.','Un método recibe parámetros locales. return devuelve un resultado y termina la llamada. void no devuelve un valor. En este laboratorio los métodos auxiliares se declaran static y reciben sus robots como parámetros.','Métodos: acciones reutilizables','Un método es un grupo de instrucciones con nombre que puedes llamar cuando lo necesitas. Puede recibir datos entre paréntesis y, si debe entregar una respuesta, la envía con return.'],
+ ['POO · Objetos','Clases, constructores, referencias y composición.','Una clase describe atributos y métodos. new crea un objeto. El constructor lo inicializa. this se refiere al objeto actual. Dos variables pueden apuntar al mismo objeto; copiar una referencia no lo duplica.','POO: clases y objetos','Una clase es como el plano de un robot. Un objeto es un robot concreto creado a partir de ese plano. El constructor prepara sus datos; cada objeto conserva su propio estado.'],
+ ['POO · Diseño','Encapsulación, herencia, polimorfismo e interfaces.','private protege el estado. Un método público puede validar cambios. extends hereda comportamiento. La implementación de un método depende del objeto real, aunque la referencia sea de la clase base o de una interfaz. implements establece un contrato.','POO: reglas y comportamientos','Diseñar objetos también significa proteger sus datos y definir qué acciones permiten. Una interfaz describe una promesa; distintos objetos pueden cumplirla de formas diferentes.'],
+ ['Arreglos y listas','Procesar varios datos y objetos.','Un arreglo tiene tamaño fijo e índices desde 0 hasta length - 1. ArrayList cambia de tamaño y ofrece add(), size() y get(). Los arreglos de referencias también pueden compartir objetos.','Guardar grupos de datos','Un arreglo guarda varios datos bajo un solo nombre y usa posiciones que empiezan en 0. Una lista puede crecer cuando agregas más elementos.'],
+ ['Expediciones','Combinar lógica y POO en problemas completos.','Planea el algoritmo, divide responsabilidades, prueba casos y explica los resultados. Estas misiones combinan conceptos anteriores. Las últimas también resuelven problemas de consola fuera del mapa.','Combinar las piezas','Un programa completo combina datos, decisiones, repeticiones y objetos. No hace falta entender todo de una vez: sigue el programa por partes y observa qué cambia.']
+].map((c,i)=>({id:i,title:c[0],description:c[1],reference:c[2],guideTitle:c[3],guideText:c[4]}));
 const levels=[];
 const robot=(s,name='Atlas')=>s.objects.find(o=>o.robot?.name===name)?.robot;
 const at=(x,y,name='Atlas')=>s=>robot(s,name)?.x===x&&robot(s,name)?.y===y;
@@ -134,6 +134,152 @@ add(8,'Consola · Contar aprobados','write','int[] notas = new int[]{5, 8, 6, 9}
 add(8,'Consola · Un producto con reglas','write','class Producto {\n  private int stock;\n  Producto(int stock) { this.stock = stock; }\n  public boolean vender(int cantidad) {\n    if (cantidad > 0 && cantidad <= stock) {\n      stock -= cantidad;\n      return true;\n    }\n    return false;\n  }\n  public int getStock() { return stock; }\n}\nProducto p = new Producto(5);\nSystem.out.println(p.vender(2));\nSystem.out.println(p.vender(8));\nSystem.out.println(p.getStock());','Implementa vender(): acepta 2, rechaza 8. Imprime true, false y 3.',all(output(true,false,3),field('Producto','stock',3)),{starter:'class Producto {\n  private int stock;\n  Producto(int stock) { this.stock = stock; }\n  public boolean vender(int cantidad) {\n    // Valida, modifica y devuelve el resultado.\n    return false;\n  }\n  public int getStock() { return stock; }\n}\nProducto p = new Producto(5);\nSystem.out.println(p.vender(2));\nSystem.out.println(p.vender(8));\nSystem.out.println(p.getStock());'});
 add(8,'Proyecto · Informe de inventario','project','class Producto {\n  private int unidades;\n  Producto(int unidades) { this.unidades = unidades; }\n  public int getUnidades() { return unidades; }\n}\nProducto[] inventario = new Producto[]{new Producto(3), new Producto(0), new Producto(5)};\nint total = 0;\nint agotados = 0;\nfor (int i = 0; i < inventario.length; i++) {\n  total += inventario[i].getUnidades();\n  if (inventario[i].getUnidades() == 0) { agotados++; }\n}\nSystem.out.println("Unidades: " + total);\nSystem.out.println("Agotados: " + agotados);','Modela productos con encapsulación. Imprime Unidades: 8 y Agotados: 1.',output('Unidades: 8','Agotados: 1'),{starter:'class Producto {\n  private int unidades;\n  Producto(int unidades) { this.unidades = unidades; }\n  public int getUnidades() { return unidades; }\n}\nProducto[] inventario = new Producto[]{new Producto(3), new Producto(0), new Producto(5)};\n// Calcula el total y la cantidad de productos agotados.',require:'inventario[i]',hint:'Mantén dos acumuladores independientes: uno suma unidades; el otro cuenta productos sin existencias.'});
 add(8,'Proyecto final · Central de reparto','project','interface Ruta { void viajar(Robot r); }\nclass Desvio implements Ruta {\n  public void viajar(Robot r) { r.norte(); r.este(); r.este(); r.sur(); }\n}\nclass Recta implements Ruta {\n  public void viajar(Robot r) { for (int i = 0; i < 3; i++) { r.este(); } }\n}\nclass Servicio {\n  private Robot robot;\n  private Ruta ruta;\n  Servicio(Robot robot, Ruta ruta) { this.robot = robot; this.ruta = ruta; }\n  public void entregar() { robot.recoger(); ruta.viajar(robot); robot.dejar(); }\n}\nServicio[] servicios = new Servicio[]{new Servicio(robot, new Desvio()), new Servicio(ayudante, new Recta())};\nfor (int i = 0; i < servicios.length; i++) { servicios[i].entregar(); }\nSystem.out.println(robot.getEntregas() + ayudante.getEntregas());','Combina interfaces, composición y un arreglo de servicios. Atlas entrega en (2, 2), Luna en (3, 3). Imprime 2.',all(at(2,2),at(3,3,'Luna'),s=>robot(s).delivered===1&&robot(s,'Luna').delivered===1,output(2)),{starter:'interface Ruta { void viajar(Robot r); }\nclass Desvio implements Ruta {\n  public void viajar(Robot r) { /* Rodea el muro */ }\n}\nclass Recta implements Ruta {\n  public void viajar(Robot r) { /* Tres pasos al este */ }\n}\nclass Servicio {\n  private Robot robot;\n  private Ruta ruta;\n  Servicio(Robot robot, Ruta ruta) { this.robot = robot; this.ruta = ruta; }\n  public void entregar() { /* Recoger, viajar y dejar */ }\n}\n// Crea un arreglo de servicios con las dos rutas.\n// Ejecuta cada servicio e imprime el total de entregas.',initial:{helper:{},boxes:[[0,2,1],[0,3,1]],walls:[[1,2]],targets:[[2,2],[3,3]]},require:'Servicio[]',hint:'La ruta sabe cómo viajar; el servicio coordina la entrega. Cada servicio guarda su robot y su estrategia.'});
+const learningContexts={
+ m11:'La variable pasos empieza guardando 3. En la línea siguiente, pasos + 2 calcula 5 y el signo = guarda ese nuevo valor en pasos.',
+ m12:'Primero se crea energia con el valor 10. Luego energia - 3 calcula 7 y la asignación actualiza la misma variable.',
+ m13:'Compara las dos divisiones: 5 / 2 usa enteros y da 2; 5.0 / 2 incluye un decimal y da 2.5. Por ejemplo, 5 / 7 también da 0 si ambos números son int; usa 5.0 / 7 para conservar los decimales.',
+ m14:'distancia necesita guardar 2.5, así que su tipo debe admitir decimales. double sí puede guardarlo; int solo guarda números enteros.',
+ m15:'El primer + une texto y valores de izquierda a derecha: “Cajas: ” + 2 + 1 produce “Cajas: 21”. Con “Cajas: ” + (2 + 1), los paréntesis hacen primero la suma y el resultado es “Cajas: 3”.',
+ m16:'temporal guarda una copia del valor de a antes de cambiarlo. Sin esa variable auxiliar, el valor original se perdería al intercambiar.',
+ m17:'En (2 + 3) * 4, los paréntesis piden sumar primero: 2 + 3 = 5; después 5 * 4 = 20. Sin ellos, Java multiplica antes que sumar.',
+ m18:'antes recuerda la energía inicial. Después de moverte, usada resta la energía actual de ese valor para calcular cuánto consumiste.',
+ m19:'11 / 3 cuenta cuántas cajas completas recibe cada robot: 3. 11 % 3 calcula lo que sobra: 2.',
+ m20:'movimientos, coste y saldo son variables: cada una guarda una parte del cálculo. alcanza guarda la respuesta sí/no de la comparación final.',
+ m23:'La condición usa >=, que significa “mayor o igual”. Por eso la energía 3 también cumple una condición con límite 3.',
+ m24:'&& significa “y”: recoger solo ocurre si hay una caja y, además, autorizado es true. Las dos respuestas deben ser sí.',
+ m25:'|| significa “o”: basta con que urgente o permiso sea true para que Atlas avance.',
+ m26:'equals("atlas") pregunta si dos textos tienen el mismo contenido. == compara si dos variables apuntan al mismo objeto.',
+ m27:'&& revisa de izquierda a derecha y se detiene si ya encuentra false. Así, si otro es null, Java no intenta llamar getEnergia() sobre algo que no existe.',
+ m29:'! significa “lo contrario”. Si puedeAvanzar() responde no, ! convierte esa respuesta en sí y se ejecuta el desvío.',
+ m31:'En for (int i = 0; i < 3; i++), i empieza en 0, el bloque se repite mientras i < 3 y al final de cada vuelta i aumenta en 1. Los valores son 0, 1 y 2: tres vueltas.',
+ m34:'total es un acumulador: comienza en 0 y cada caja recogida le suma 1. Al final guarda cuántas cajas se recogieron.',
+ m35:'break sale del bucle en cuanto se cumple la condición. Las instrucciones posteriores al bucle continúan normalmente.',
+ m37:'i % 2 calcula el sobrante al dividir i entre 2. Si el sobrante es 0, i es par; continue salta el resto de esa vuelta.',
+ m41:'La cabecera del método muestra su nombre, lo que recibe y lo que devuelve. Cada llamada ejecuta su bloque; el resultado de return se puede guardar en una variable.',
+ m44:'El parámetro local recibe el valor del contador al llamar al método. Cambiar ese parámetro no cambia automáticamente la variable que se pasó.',
+ m45:'return entrega el resultado y termina ese método en ese momento. El código que aparezca después de ese return no se ejecuta.',
+ m51:'Robot es la clase (el plano); robot es un objeto concreto. Sus métodos describen acciones y sus atributos guardan su estado.',
+ m52:'El constructor Robot(...) prepara los datos del objeto. new Robot(...) crea un Robot nuevo y los valores entre paréntesis llegan al constructor.',
+ m53:'this.energia nombra el dato que guarda el objeto. energia, sin this, nombra el parámetro que llegó al constructor.',
+ m54:'new Robot(...) crea dos robots distintos. Cada objeto conserva su propia energía y posición, aunque ambos sigan el mismo plano Robot.',
+ m55:'Las variables atlas y copia pueden guardar la dirección del mismo objeto. Cambiarlo mediante una también se nota al consultarlo mediante la otra.',
+ m57:'Mision tiene un Robot dentro: esta relación “tiene un” es composición. El objeto Mision coordina acciones delegándolas a su robot.',
+ m61:'private impide que otras partes cambien el saldo directamente. El método público puede comprobar una regla antes de aceptar el cambio.',
+ m63:'extends crea una clase hija basada en otra. La hija reutiliza lo heredado y puede añadir o cambiar una acción.',
+ m64:'La variable puede estar declarada como la clase general, pero el objeto concreto decide qué versión del método ejecutar.',
+ m65:'Una interface enumera acciones que las clases prometen ofrecer. No trae la ruta hecha: cada clase concreta debe programar su propia versión.',
+ m66:'La clase debe declarar exactamente el método que la interfaz promete, con el mismo nombre, datos de entrada y tipo de respuesta.',
+ m69:'@Override indica que esta clase reemplaza un método heredado. La llamada se mantiene igual; cambia lo que hace el objeto específico.',
+ m71:'Las posiciones del arreglo empiezan en 0: valores[0] es el primer elemento. Si hay 3 elementos, sus índices son 0, 1 y 2.',
+ m73:'length es la cantidad de elementos, no un índice válido. En un arreglo de 3 elementos, el último índice es length - 1, o sea 2.',
+ m74:'El arreglo guarda referencias a objetos. Copiar la referencia de un objeto en otra posición no crea un objeto nuevo.',
+ m75:'ArrayList es una lista que puede crecer. add(...) agrega un elemento al final y size() indica cuántos hay.',
+ m76:'get(i) lee la posición i de la lista. Igual que en un arreglo, la primera posición se llama 0, no 1.',
+ m78:'maximo conserva el valor más alto visto hasta ahora. En cada vuelta comparas el dato actual y solo lo reemplazas si encontraste uno mayor.',
+ m79:'Filtrar es revisar cada dato y guardar solo los que cumplen la condición. grandes.add(...) agrega a la lista los valores que pasan el filtro.',
+ m83:'Una variable declarada dentro de { } solo existe dentro de ese bloque. total debe declararse fuera del for para poder leerlo después.',
+ m84:'El arreglo contiene dos referencias al mismo Atlas. El bucle llama este() dos veces sobre ese único objeto, por eso avanza dos casillas.',
+ m85:'Corto y Largo cumplen la misma interface, pero valor() devuelve algo distinto en cada uno. Al recorrer Coste[], Java llama la versión del objeto concreto.',
+ m86:'La condición comprueba primero que el coste sea válido y que alcance el saldo. Solo entonces resta; así el saldo no queda negativo.',
+ m87:'aprobados es un contador: empieza en 0 y aumenta en 1 por cada nota que cumple la regla >= 6.',
+ m88:'vender() valida la cantidad, cambia stock solo cuando alcanza y devuelve true o false para decir si la venta se aceptó.',
+ m89:'total suma unidades; agotados cuenta productos en cero. Son dos variables distintas porque responden preguntas distintas.'
+};
+function conditionAt(code,word) {
+ const start=code.indexOf(word);if(start<0)return '';
+ const open=code.indexOf('(',start);if(open<0)return '';
+ let depth=0;
+ for(let i=open;i<code.length;i++){if(code[i]==='(')depth++;else if(code[i]===')'&&--depth===0)return code.slice(open+1,i).trim();}
+ return '';
+}
+function learningContext(m) {
+ if(learningContexts[m.id])return learningContexts[m.id];
+ const code=m.solution;
+ if(m.chapter===0) {
+  const calls=[...code.matchAll(/robot\.([A-Za-z_]\w*)\s*\(/g)].map(match=>match[1]);
+  const meanings={avanzar:'avanza una casilla hacia donde mira',este:'mueve una casilla al este',oeste:'mueve una casilla al oeste',norte:'mueve una casilla al norte',sur:'mueve una casilla al sur',girarDerecha:'gira a la derecha sin cambiar de casilla',girarIzquierda:'gira a la izquierda sin cambiar de casilla',recoger:'recoge la caja de su casilla',dejar:'deja una caja en su casilla',recargar:'recarga energía',getX:'consulta la coordenada horizontal',getY:'consulta la coordenada vertical',getEntregas:'consulta cuántas entregas hizo',getEnergia:'consulta cuánta energía queda'};
+  const [first,second]=[...new Set(calls)].slice(0,2);
+  return first?`En este nivel, ${first}() ${meanings[first]??'ejecuta una acción del robot'}. ${second?`${second}() ${meanings[second]??'consulta o cambia su estado'}. `:''}Sigue las instrucciones en orden y observa cómo cada una cambia el mundo.`:'En este nivel, sigue las instrucciones en orden y observa cómo cada una cambia la posición o el estado del robot.';
+ }
+ if(m.chapter===1) {
+  const declaration=code.match(/\b(int|double|boolean|String)\s+([A-Za-z_]\w*)\s*=\s*([^;\n]+);/);
+  return declaration?`En este nivel, ${declaration[2]} es una variable de tipo ${declaration[1]}. Empieza guardando ${declaration[3]}; busca dónde vuelve a leerse o actualizarse para seguir el cálculo.`:'En este nivel, sigue el valor de cada variable: identifica dónde se crea, qué cálculo usa y qué valor termina guardando.';
+ }
+ if(m.chapter===2) {
+  const condition=conditionAt(code,'if');
+  if(condition)return `En este nivel, if evalúa la pregunta ${condition}. Si la respuesta es true (sí), ejecuta las instrucciones de ese bloque; si es false (no), sigue el otro camino cuando hay un else.`;
+  return 'En este nivel, una condición decide si se ejecuta una acción. Lee la pregunta y comprueba si sus valores hacen que la respuesta sea true o false.';
+ }
+ if(m.chapter===3) {
+  const loop=code.match(/\bfor\s*\(([^\n]+?)\)/);
+  if(loop){const parts=loop[1].split(';').map(part=>part.trim());return `En este nivel, ${loop[0]} controla la repetición. ${parts.length===3?`${parts[0]} prepara el contador; ${parts[1]} decide si sigue otra vuelta; ${parts[2]} lo actualiza al final.`:'Lee el inicio, la condición y el cambio del contador.'} Las instrucciones entre { } son el trabajo que se repite.`;}
+  const condition=conditionAt(code,'while');
+  if(condition)return `En este nivel, while repite el bloque mientras ${condition} responda true. Revisa qué instrucción cambia esa situación para que el bucle pueda terminar.`;
+  return 'En este nivel, sigue el contador o la condición en cada vuelta. Pregúntate qué cambia y cuándo debe detenerse la repetición.';
+ }
+ if(m.chapter===4) {
+  const signature=code.match(/\b(?:static\s+)?(?:int|double|boolean|String|void)\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/);
+  return signature?`En este nivel, ${signature[1]}(...) es un método reutilizable. Lo que aparece en su definición (${signature[2]||'nada'}) son los datos que puede recibir; cada llamada le pasa argumentos entre paréntesis. ${/\breturn\b/.test(code)?'return envía la respuesta de vuelta.':'void indica que el método hace una acción sin devolver un valor.'}`:'En este nivel, busca el método que se define y dónde se llama. Los datos que recibe pueden cambiar el trabajo que realiza.';
+ }
+ if(m.chapter===5) {
+  const className=code.match(/\bclass\s+([A-Za-z_]\w*)/),constructor=className&&code.match(new RegExp(`\\b${className[1]}\\s*\\(([^)]*)\\)`));
+  if(className&&constructor)return `En este nivel, ${className[1]} es el plano y su constructor recibe (${constructor[1]||'sin datos'}). Cada llamada new ${className[1]}(...) crea un objeto con su propio estado.`;
+  return 'En este nivel, distingue el plano (class) del objeto creado con new. Las variables pueden referirse al mismo objeto o a objetos distintos.';
+ }
+ if(m.chapter===6) {
+  if(/\bprivate\b/.test(code))return 'En este nivel, private protege un dato para que solo la propia clase lo modifique. Busca el método público que permite consultarlo o cambiarlo siguiendo una regla.';
+  if(/\binterface\b/.test(code))return 'En este nivel, la interface anuncia qué método deben tener las clases. Cada clase concreta escribe su propia forma de cumplir esa promesa.';
+  if(/\bextends\b/.test(code))return 'En este nivel, una clase hereda lo que ya sabe hacer otra. Observa qué comportamiento agrega o reemplaza la clase hija.';
+  return 'En este nivel, una misma llamada puede producir una acción distinta según el objeto. Sigue el tipo del objeto y el método que este implementa.';
+ }
+ if(m.chapter===7) {
+  if(/\bArrayList\b/.test(code))return 'En este nivel, la lista guarda una cantidad variable de elementos. add(...) agrega, size() cuenta y get(i) lee una posición; la primera posición es 0.';
+  return 'En este nivel, el arreglo guarda varios valores bajo un nombre. [i] elige una posición, empezando por 0; length indica cuántos elementos hay.';
+ }
+ const concepts=[];
+ if(/\bclass\b/.test(code))concepts.push('clases y objetos');
+ if(/\bif\s*\(/.test(code))concepts.push('decisiones');
+ if(/\bfor\s*\(|\bwhile\s*\(/.test(code))concepts.push('repeticiones');
+ if(/\[\]/.test(code)||/\bArrayList\b/.test(code))concepts.push('colecciones de datos');
+ if(/\binterface\b|\bimplements\b/.test(code))concepts.push('interfaces');
+ return `En este nivel se combinan ${concepts.length?concepts.join(', ')+' y otros conceptos':'varios conceptos anteriores'}. Sigue una parte a la vez: qué dato se lee, qué regla se comprueba y qué acción ocurre después.`;
+}
+function learningNotes(m) {
+ const code=m.solution,notes=[],used=new Set();
+ const add=(term,text)=>{if(!used.has(term)){notes.push({term,text});used.add(term);}};
+ if(/\bint\b/.test(code))add('int','Guarda números enteros, sin parte decimal.');
+ if(/\bdouble\b/.test(code))add('double','Guarda números que pueden tener decimales, como 2.5.');
+ if(/\bboolean\b/.test(code))add('boolean','Guarda una respuesta de sí/no: true o false.');
+ if(/\bString\b|"/.test(code))add('String','Guarda texto. Las comillas marcan dónde empieza y termina.');
+ if(/\b\d+(?:\.\d+)?\s*\/\s*\d+/.test(code))add('/','Significa dividir. Si ambos valores son int, Java descarta la parte decimal: 5 / 7 da 0; con 5.0 / 7 conserva los decimales.');
+ if(/\+\s*\(/.test(code))add('+ (...)','El + antes de un grupo suma números; si antes hay texto, lo une con el resultado. Los paréntesis hacen ese cálculo primero.');
+ else if(/(?<!\+)\+(?![+=])/.test(code))add('+','Suma números. Si uno de los lados es texto, une los valores como texto.');
+ if(/\([^()]*[+*/-][^()]*\)/.test(code))add('( ... )','Agrupa una operación para calcularla primero. En una llamada, los paréntesis también encierran los datos enviados al método.');
+ if(/%/.test(code))add('%','Da el sobrante de una división. Por ejemplo, 11 % 3 da 2.');
+ if(/==|!=|>=|<=|(?<![=<>])>(?![=])|(?<![=<>])<(?![=])/.test(code))add('Comparaciones','== significa “igual que”; != “distinto”; < y > comparan menor y mayor; <= y >= también incluyen la igualdad.');
+ if(/(?<![=!<>])=(?!=)/.test(code))add('=','Guarda o actualiza un valor. Para preguntar si dos valores son iguales se usa ==.');
+ if(/&&/.test(code))add('&&','Significa “y”: las dos condiciones deben ser verdaderas.');
+ if(/\|\|/.test(code))add('||','Significa “o”: basta con que una condición sea verdadera.');
+ if(/!/.test(code))add('!','Invierte una respuesta: true pasa a false y false pasa a true.');
+ if(/\bif\s*\(/.test(code))add('if / else','if elige un bloque cuando la condición es true. else contiene el camino alternativo.');
+ if(/\bfor\s*\(/.test(code))add('for','Repite instrucciones con un inicio, una condición y un cambio del contador.');
+ if(/\bwhile\s*\(/.test(code))add('while','Repite mientras una condición siga siendo true. El bloque debe cambiar algo para poder terminar.');
+ if(/\bbreak\b/.test(code))add('break','Sale del bucle actual inmediatamente.');
+ if(/\bcontinue\b/.test(code))add('continue','Salta al inicio de la siguiente vuelta del bucle.');
+ if(/\+\+|\+=|-=/.test(code))add('++ / += / -=','Atajos para actualizar una variable: i++ suma 1; total += n equivale a total = total + n.');
+ if(/\breturn\b/.test(code))add('return','Devuelve una respuesta y termina el método actual.');
+ if(/\bvoid\b/.test(code))add('void','Indica que el método realiza una acción y no devuelve un resultado.');
+ if(/\bnew\b/.test(code))add('new','Crea un objeto nuevo usando el constructor de su clase.');
+ if(/\bthis\b/.test(code))add('this','Se refiere al objeto actual, a sus propios datos y métodos.');
+ if(/\bprivate\b/.test(code))add('private','Protege un dato o método para que otras clases no lo usen directamente.');
+ if(/\bextends\b/.test(code))add('extends','Indica que una clase hereda datos o acciones de otra.');
+ if(/\binterface\b|\bimplements\b/.test(code))add('interface / implements','La interface describe acciones prometidas; implements indica que una clase las programa.');
+ if(/\[\]/.test(code))add('[ ]','Declara o consulta posiciones de un arreglo. El primer índice es 0.');
+ if(/\bArrayList\b/.test(code))add('ArrayList','Es una lista que puede crecer; add agrega, size cuenta y get lee un elemento.');
+ if(m.chapter===0){add('.','El punto elige una acción o dato del objeto, como robot.este().');add(';','El punto y coma marca el final de una instrucción.');}
+ return notes.slice(0,5);
+}
+function guideFor(m) {const chapter=chapters[m.chapter];return {chapter:chapter.title,title:chapter.guideTitle,definition:chapter.guideText,application:learningContext(m),notes:learningNotes(m)};}
 const orderStart=m=>m.id==='m06'?[...m.chunks.slice(1),m.chunks[0]]:m.chunks.slice().reverse();
-globalThis.JavaCourse={chapters,levels,robot,orderStart,grade(m,result,source){return !result.error&&m.check(result.final)&&(!m.require||source.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g,'').includes(m.require));}};
+globalThis.JavaCourse={chapters,levels,robot,orderStart,guideFor,grade(m,result,source){return !result.error&&m.check(result.final)&&(!m.require||source.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g,'').includes(m.require));}};
 })();

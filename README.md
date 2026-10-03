@@ -28,7 +28,7 @@ El paquete `phaser` se fija en `package-lock.json`; el build publica su distribu
 
 Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
 
-La interfaz utiliza una paleta de fantasía oscura: negro verdoso, bosque, jade y ámbar, con acentos propios por región. `web/retro.css` añade tipografía pixel, marcos con relieve, progreso segmentado y textura estática sobre los paisajes. Las superficies de los controles son oscuras; los colores brillantes se reservan para texto, foco y estado. Las lecciones y el código usan tipografías de lectura y no llevan filtros ni líneas de pantalla. La fuente variable Pixelify Sans se sirve desde `web/assets/fonts/`, junto con su licencia OFL, sin depender de una descarga externa al abrir el juego. Consulta la [paleta y los criterios de presentación](docs/retro-theme.md).
+La interfaz utiliza una paleta de fantasía oscura: negro verdoso, bosque, jade y ámbar, con acentos propios por región. `web/retro.css` añade tipografía pixel, marcos con relieve, progreso segmentado y textura estática sobre los paisajes. Las superficies de los controles son oscuras; los colores brillantes se reservan para texto, foco y estado. Las lecciones y el código usan tipografías de lectura y no llevan filtros ni líneas de pantalla. La fuente variable Pixelify Sans se sirve desde `web/assets/fonts/`, junto con su licencia OFL, sin depender de una descarga externa al abrir el juego. El cuaderno de Atlas explica cada capítulo en lenguaje sencillo, conecta la idea con la misión actual y permite desplegar definiciones de las palabras y símbolos presentes en el código. Consulta la [paleta y los criterios de presentación](docs/retro-theme.md).
 
 Atlas es un explorador pixel art con cabeza de monitor CRT, carcasa crema y oliva, sonrisa amarilla y núcleo de cristal. Su retrato transparente es `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene las cuatro orientaciones en una hoja 2 × 2. `web/robot.css` selecciona la vista según `robot.dir`: este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. Consulta el [diseño, referencia e integración de Atlas](docs/atlas-design.md) y sus [prompts completos](docs/atlas-prompts.json).
 
@@ -44,6 +44,7 @@ El build incorpora PNG y WebP como recursos binarios del Worker y conserva sus t
 | Aventura visual | `web/journey.js`, `web/worlds.js`, PNG/WebP y transiciones CSS | Nueve regiones y rutas, personajes 2D y HUD conectado a la traza |
 | Motor educativo | Analizador e intérprete propios en JavaScript | Interpretar el subconjunto de Java, verificar operaciones y generar estados de ejecución |
 | Contenido y evaluación | Datos y funciones en `web/lessons.js` | Definir las 90 misiones, sus estados iniciales, soluciones de referencia y objetivos |
+| Guía didáctica | Generador de explicaciones en `web/lessons.js`, renderizado en `web/app.js` | Explicar cada concepto con palabras simples, relacionarlo con la misión y definir los símbolos que aparecen en su código |
 | Exportación | Generador de código Java en `web/export.js` | Construir `Mision.java`, con las clases del alumno y la API del robot |
 | Servidor de producción | Worker con API Fetch | Servir los recursos web y atender `/api/progress` |
 | Persistencia | Cloudflare D1, compatible con SQLite | Guardar finalizaciones y última misión por usuario |
@@ -102,9 +103,10 @@ robotica-java/
     ├── worlds.css             # Presentación de las regiones y navegación móvil
     ├── robot.css              # Sprite direccional de Atlas y movimiento reducido
     ├── retro.css              # Tipografía pixel, marcos, texturas y estados oscuros
+    ├── learning-guide.css     # Bitácora por nivel y glosario contextual
     ├── assets/                # Retrato, hoja direccional y nueve mapas WebP
     ├── engine.js              # Parser, ámbitos, objetos e intérprete
-    ├── lessons.js             # Capítulos, misiones y evaluación
+    ├── lessons.js             # Capítulos, misiones, evaluación y guía de conceptos
     └── export.js              # Código Java completo para descargar
 ```
 
