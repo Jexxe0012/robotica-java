@@ -70,7 +70,7 @@ class Interpreter {
     this.classes.set('Robot',{name:'Robot',fields:[],methods:[],parent:null,native:true});
     for(const node of this.ast){if(node.kind==='class'){if(this.classes.has(node.name))throw new JavaError('La clase ya existe: '+node.name,node.line);this.classes.set(node.name,node);}if(node.kind==='method')this.helpers.set(node.name,node);}
     for(const c of this.classes.values()){const visited=new Set();for(let p=c;p;p=this.classes.get(p.parent)){if(visited.has(p.name))throw new JavaError('La herencia contiene un ciclo.',c.line);visited.add(p.name);if(p.parent&&!this.classes.has(p.parent))throw new JavaError('La clase base no existe: '+p.parent,c.line);}for(const name of c.interfaces??[])if(!this.classes.get(name)?.isInterface)throw new JavaError('La interfaz no existe: '+name,c.line);}
-    this.global=new Scope();const atlas=this.robotObject('Atlas',initial.robot??{});this.global.values.set('robot',V('Robot',atlas));
+    this.global=new Scope();const atlas=this.robotObject('Miaubit',initial.robot??{});this.global.values.set('robot',V('Robot',atlas));
     if(initial.helper){const helper=this.robotObject('Luna',{y:3,...initial.helper});this.global.values.set('ayudante',V('Robot',helper));}
   }
   allocate(object){if(this.heap.length>=80)throw new JavaError('El laboratorio permite observar hasta 80 objetos por prueba. Revisa cuántos creas en el bucle.');this.heap.push(object);}

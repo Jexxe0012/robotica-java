@@ -131,7 +131,7 @@
       $('world-grid').append(cell);
     }
     globalThis.AtlasPhaserWorld?.setState(state,snap);
-    const atlas = robots.find(o => o.robot.name === 'Atlas')?.robot ?? robots[0]?.robot;
+    const atlas = robots.find(o => o.robot.name === 'Miaubit')?.robot ?? robots[0]?.robot;
     $('hud-energy').textContent = atlas?.energy ?? '—';
     $('hud-cargo').textContent = atlas?.cargo ?? '—';
     $('hud-delivered').textContent = atlas?.delivered ?? '—';
