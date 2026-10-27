@@ -1,5 +1,7 @@
 # Primera aventura: el sendero del Alba
 
+La base de este capítulo se extendió a las nueve regiones. Consulta la [arquitectura actual de la campaña](campaign-adventure.md).
+
 El primer capítulo convierte sus diez misiones existentes en una historia: Miaubit ayuda al guardián del Árbol del Alba a devolver la luz al sendero. La baliza se enciende con la misión 02, las señales del desvío con la 06 y el puente con las diez misiones resueltas. Completar únicamente la misión 10 no enciende el puente si quedan retos pendientes.
 
 ## Escenario editable
@@ -12,11 +14,11 @@ El escenario rodea un área de programación de 6 × 5 casillas, situada en (2, 
 
 ## Presentación e interacción
 
-- `web/alba-scene.js` renderiza las capas con Phaser y representa las instantáneas del intérprete. Las animaciones de movimiento, balanceo, carga y celebración usan los sprites existentes de Miaubit y transformaciones de Phaser.
+- `web/adventure-scene.js` renderiza las capas con Phaser y representa las instantáneas del intérprete. Las animaciones de movimiento, balanceo, carga y celebración usan los sprites existentes de Miaubit y transformaciones de Phaser.
 - La cámara permite ver el escenario completo, seguir a Miaubit o concentrarse en la misión. En escritorio empieza mostrando el mapa; en móvil empieza cerca del área de ejecución.
-- `web/phaser-world.js` dirige el primer capítulo a la nueva escena y conserva la escena clásica para los capítulos restantes, incluyendo POO y varios robots.
+- `web/phaser-world.js` conecta todos los capítulos a una escena compartida, incluyendo POO y varios robots.
 - `web/chapter-one.js` contiene los diez textos y calcula los efectos de historia exclusivamente a partir de los identificadores de misiones completadas.
-- `web/adventure-ui.js` conecta esa historia con los paneles, el cuaderno y el acceso al Valle de Cristal. Los capítulos siguen pudiendo explorarse libremente desde el mapa.
+- `web/campaign.js` amplía la historia y el estado a todas las regiones; `web/adventure-ui.js` los conecta con los paneles, el cuaderno y el acceso a la región siguiente. Los capítulos siguen pudiendo explorarse libremente desde el mapa.
 - En móvil, los controles de ejecución permanecen accesibles y al ejecutar se vuelve al escenario. Ver resultado lleva a la explicación y a Siguiente misión.
 
 El cuaderno conserva las definiciones, los ejemplos del nivel y el glosario de símbolos. Puede abrirse desde Entender el código. Las flechas del teclado inspeccionan casillas; no mueven al robot ni resuelven ejercicios. El movimiento sigue dependiendo del programa Java.
