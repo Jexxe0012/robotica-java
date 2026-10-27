@@ -1,6 +1,6 @@
 # Fantasía retro oscura
 
-La interfaz acompaña a Atlas con superficies de bosque y tinta, perfiles de píxel y acentos de cristal y metal envejecido. Los paneles, botones, etiquetas seleccionadas, avisos y objetivos evitan rellenos crema o amarillos claros.
+La interfaz acompaña a Miaubit con superficies de bosque y tinta, perfiles de píxel y acentos de cristal y metal envejecido. Los paneles, botones, etiquetas seleccionadas, avisos y objetivos evitan rellenos crema o amarillos claros.
 
 | Uso | Color |
 | --- | --- |
@@ -19,7 +19,7 @@ El texto principal y secundario alcanza aproximadamente 11.96:1 y 6.88:1 sobre e
 ## Presentación
 
 - `styles.css` conserva la estructura adaptable y los colores base.
-- `worlds.js` define nueve conjuntos de terreno oscuro y acentos regionales. `worlds.css` atenúa los paisajes existentes con brillo 0.63 y saturación 0.78, sin reescribir sus archivos.
+- `worlds.js` define los acentos de las nueve regiones y `campaign.js` las paletas de sus mosaicos. `worlds.css` atenúa los paisajes con brillo 0.63 y saturación 0.78; sus archivos WebP se optimizaron para la selección de capítulos.
 - `retro.css` añade la familia de títulos, biseles cuadrados, sombras duras, esquinas escalonadas en el retrato y progreso segmentado. La trama de pantalla es estática y solo aparece sobre imágenes; no hay parpadeo.
 - El código mantiene una fuente monoespaciada de lectura; la fuente pixel se reserva para marca, títulos, números de misión y botones. Los focos de teclado y los estados de respuesta, ayuda y error conservan contraste sobre fondos oscuros.
 - Las reglas existentes de movimiento reducido siguen desactivando animaciones. Las texturas no interceptan clics.

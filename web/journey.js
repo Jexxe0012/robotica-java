@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
   const {levels, chapters} = JavaCourse;
   const worlds = AtlasWorlds;
+  const missionsByChapter=chapters.map((_,index)=>levels.filter(m=>m.chapter===index));
   const modes = {predict:'Leer y predecir', order:'Ordenar instrucciones', fix:'Encontrar y corregir', write:'Programar', project:'Proyecto'};
   let current, completed, choose, pause, badgeTimer, regionIndex = -1;
   function el(tag, text, className) {
@@ -17,12 +18,13 @@
     $('mission-view').hidden = name !== 'mission';
     document.body.dataset.view = name;
     globalThis.AdventureAudio?.setActive(name==='mission');
+    ChapterLandscapes.setVisible(name==='map');
     $('route-toggle').setAttribute('aria-expanded', String(name === 'map'));
     document.querySelector('.skip-link').href = name === 'map' ? '#journey-title' : '#mission-title';
     if (focus) $(name === 'map' ? 'journey-title' : 'mission-title').focus({preventScroll:true});
     window.scrollTo({top:0, behavior:'instant'});
-    if(name==='mission') requestAnimationFrame(()=>globalThis.AtlasPhaserWorld?.setActive(true));
-    else globalThis.AtlasPhaserWorld?.setActive(false);
+    if(name==='mission') requestAnimationFrame(()=>{if(document.body.dataset.view==='mission')globalThis.ExpeditionWorld?.setActive(true);});
+    else globalThis.ExpeditionWorld?.setActive(false);
   }
   function openMap() {
     pause();
@@ -30,27 +32,23 @@
     view('map', true);
   }
   function chapter(index) {
-    const missions = levels.filter(m => m.chapter === index);
+    const missions = missionsByChapter[index];
     choose(missions.find(m => !completed.has(m.id)) ?? missions[0], false);
     $('chapters').querySelector(`[data-chapter="${index}"]`)?.focus({preventScroll:true});
   }
   function route(mission, finished) {
     current = mission;
     completed = finished;
-    const region = worlds[current.chapter], points = region.points;
-    if (regionIndex !== current.chapter) {
+    const region = worlds[current.chapter], points = region.points,changed=regionIndex!==current.chapter;
+    if (changed) {
       regionIndex = current.chapter;
       document.body.dataset.region = region.id;
-      document.body.style.setProperty('--region-image', `url("${region.image}")`);
       document.body.style.setProperty('--region-accent', region.accent);
-      region.ground.forEach((color, i) => document.body.style.setProperty('--terrain-'+i, color));
-      $('map-landscape').src = region.image;
-      $('map-landscape').alt = region.alt;
+      ChapterLandscapes.setRegion(current.chapter);
       $('map-description').textContent = region.description;
     }
-    $('chapters').replaceChildren();
-    chapters.forEach((c, i) => {
-      const missions = levels.filter(m => m.chapter === i);
+    if(!$('chapters').children.length)chapters.forEach((c, i) => {
+      const missions = missionsByChapter[i];
       const button = el('button', undefined, 'chapter-button' + (i === current.chapter ? ' active' : ''));
       button.type = 'button';
       button.dataset.chapter = i;
@@ -65,11 +63,18 @@
       button.addEventListener('click', () => chapter(i));
       $('chapters').append(button);
     });
-    const missions = levels.filter(m => m.chapter === current.chapter);
+    [...$('chapters').children].forEach((button,i)=>{
+      const count=missionsByChapter[i].filter(m=>completed.has(m.id)).length;
+      button.classList.toggle('active',i===current.chapter);button.setAttribute('aria-pressed',String(i===current.chapter));
+      button.setAttribute('aria-label',`Capítulo ${i+1}: ${chapters[i].title}, ${count} de 10 completadas`);
+      button.querySelector('.chapter-count').textContent=`${count} / 10`;
+    });
+    const missions = missionsByChapter[current.chapter];
     $('map-title').textContent = region.title;
     $('map-kicker').textContent = `CAPÍTULO ${String(current.chapter+1).padStart(2,'0')} · ${chapters[current.chapter].title.toUpperCase()}`;
     $('map-progress').textContent = `${missions.filter(m => completed.has(m.id)).length} de 10 misiones completadas`;
     $('map-stage').dataset.biome = current.chapter;
+    if(changed){
     $('map-path').replaceChildren();
     for (let i = 1; i < points.length; i++) {
       const [x1, y1] = points[i-1], [x2, y2] = points[i];
@@ -99,6 +104,13 @@
       });
       $('map-nodes').append(button);
     });
+    }
+    [...$('map-path').children].forEach((path,i)=>{if(i%2){const previous=missions[(i-1)/2],next=missions[(i+1)/2];path.classList.toggle('done',completed.has(previous.id)&&completed.has(next.id));}});
+    [...$('map-nodes').children].forEach((button,i)=>{
+      const m=missions[i],done=completed.has(m.id);button.classList.toggle('selected',m.id===current.id);button.classList.toggle('completed',done);
+      button.setAttribute('aria-pressed',String(m.id===current.id));button.setAttribute('aria-label',`Misión ${m.number}: ${m.title}${done?', completada':''}${m.mode==='project'?', proyecto':''}`);
+      button.firstElementChild.textContent=done?'✓':m.mode==='project'?'✦':String(m.number).padStart(2,'0');
+    });
     $('quest-kicker').textContent = `MISIÓN ${String(current.number).padStart(2,'0')} / 90`;
     $('quest-title').textContent = current.title;
     $('quest-mode').textContent = modes[current.mode];
@@ -119,7 +131,7 @@
       $('mission-badge').hidden = true;
     }
     const robots = state.objects.filter(o => o.robot);
-    $('world-grid').replaceChildren();
+    if(!$('world-grid').children.length){const fragment=document.createDocumentFragment();for(let i=0;i<30;i++){const cell=el('span');cell.setAttribute('role','listitem');fragment.append(cell);}$('world-grid').append(fragment);}
     for (let y = 0; y < 5; y++) for (let x = 0; x < 6; x++) {
       const occupants = robots.filter(o => o.robot.x === x && o.robot.y === y);
       const box = state.world.boxes.find(b => b[0] === x && b[1] === y && b[2] > 0);
@@ -127,11 +139,9 @@
       const target = state.world.targets.some(t => t[0] === x && t[1] === y);
       const charger = state.world.chargers.some(c => c[0] === x && c[1] === y);
       const details = [`Casilla (${x}, ${y})`, wall?'obstáculo':'', target?'destino':'', charger?'estación de recarga':'', box?`${box[2]} caja${box[2]===1?'':'s'}`:'', ...occupants.map(o => `${o.robot.name}, mirando ${['este','sur','oeste','norte'][o.robot.dir]}`)].filter(Boolean).join(' · ');
-      const cell=el('span', details);
-      cell.setAttribute('role','listitem');
-      $('world-grid').append(cell);
+      const cell=$('world-grid').children[y*6+x];if(cell.textContent!==details)cell.textContent=details;
     }
-    globalThis.AtlasPhaserWorld?.setState(state,snap);
+    globalThis.ExpeditionWorld?.setState(state,snap);
     const atlas = robots.find(o => o.robot.name === 'Miaubit')?.robot ?? robots[0]?.robot;
     $('hud-energy').textContent = atlas?.energy ?? '—';
     $('hud-cargo').textContent = atlas?.cargo ?? '—';
@@ -147,6 +157,7 @@
   }
   function init(onChoose, onPause) {
     choose = onChoose; pause = onPause;
+    ChapterLandscapes.init();
     $('enter-mission').addEventListener('click', () => choose(current, true));
     $('route-toggle').addEventListener('click', openMap);
     $('feedback-map').addEventListener('click', openMap);

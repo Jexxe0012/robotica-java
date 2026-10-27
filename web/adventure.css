@@ -8,13 +8,21 @@
 .notebook{margin-top:18px;border:1px solid #3c5c4a;background:#12231e}.notebook>summary{padding:13px 16px;color:var(--mint);font-size:.9rem}.notebook .learning-guide{margin:0;border:0;box-shadow:none}.story-reward{padding:13px 15px;border-left:3px solid var(--gold);background:#153128;color:#d0ddb9;margin-top:14px!important}
 #audio-toggle{font-size:.8rem;white-space:nowrap}.header-right{flex-wrap:wrap}#camera-mode{font-size:.75rem;padding:6px 9px;min-height:30px}
 #result-shortcut{display:none}
-body[data-adventure="true"] .workspace{grid-template-columns:minmax(0,1.5fr) minmax(365px,1fr)}
-body[data-adventure="true"] .world{aspect-ratio:auto;height:clamp(330px,52vh,600px);background:#192c24;border-color:#526e48}
-body[data-adventure="true"] .stage-frame{padding:10px;background:#0b1712}body[data-adventure="true"] .world-panel{border-color:#42634c}
-body[data-adventure="true"] .world-meta{font-size:.72rem}body[data-adventure="true"] .brief{margin-bottom:13px}body[data-adventure="true"] .legend{font-size:.8rem}
-body[data-adventure="true"] .panel-title>h2{font-family:var(--pixel);font-size:1.05rem}
-@media(max-width:1000px){body[data-adventure="true"] .workspace{grid-template-columns:minmax(0,1fr) minmax(320px,1fr)}}
-@media(max-width:850px){body[data-adventure="true"] .workspace{grid-template-columns:1fr}body[data-adventure="true"] .world{height:380px}.campaign-teaser{flex-wrap:wrap;gap:12px}.campaign-teaser .button{margin-left:0}.story-heading{align-items:flex-start}.story-heading h2{font-size:1.15rem}.header-right{gap:8px}}
-@media(max-width:550px){.campaign-teaser{padding:14px}.chapter-story{padding:14px}.story-heading{flex-wrap:wrap;gap:6px}.story-copy{gap:9px;align-items:flex-start}.story-copy img{width:40px;height:40px}.story-progress{gap:4px}.story-progress span{width:22px;height:23px}.story-bottom{align-items:flex-start;flex-wrap:wrap}.starter-guide ol{display:block}.starter-guide li{margin:6px 0}body[data-adventure="true"] .world{height:330px}.header-right{width:100%}#audio-toggle{padding:6px 8px;min-height:34px}.notebook>summary{font-size:.85rem}}
+.workspace{grid-template-columns:minmax(0,1.5fr) minmax(365px,1fr)}
+.world{aspect-ratio:auto;height:clamp(330px,52vh,600px);background:#192c24;border-color:#526e48}
+.stage-frame{padding:10px;background:#0b1712}.world-panel{border-color:#42634c}
+.world-meta{font-size:.72rem}.brief{margin-bottom:13px}.legend{font-size:.8rem}
+.panel-title>h2{font-family:var(--pixel);font-size:1.05rem}
+@media(max-width:1000px){.workspace{grid-template-columns:minmax(0,1fr) minmax(320px,1fr)}}
+@media(max-width:850px){.workspace{grid-template-columns:1fr}.world{height:380px}.campaign-teaser{flex-wrap:wrap;gap:12px}.campaign-teaser .button{margin-left:0}.story-heading{align-items:flex-start}.story-heading h2{font-size:1.15rem}.header-right{gap:8px}}
+@media(max-width:550px){.campaign-teaser{padding:14px}.chapter-story{padding:14px}.story-heading{flex-wrap:wrap;gap:6px}.story-copy{gap:9px;align-items:flex-start}.story-copy img{width:40px;height:40px}.story-progress{gap:4px}.story-progress span{width:22px;height:23px}.story-bottom{align-items:flex-start;flex-wrap:wrap}.starter-guide ol{display:block}.starter-guide li{margin:6px 0}.world{height:330px}.header-right{width:100%}#audio-toggle{padding:6px 8px;min-height:34px}.notebook>summary{font-size:.85rem}}
 @media(prefers-reduced-motion:reduce){.story-progress span{transition:none}}
 @media(max-width:850px){body[data-view="mission"]{padding-bottom:145px}body[data-view="mission"] .control-buttons{position:fixed;left:0;right:0;bottom:0;z-index:40;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:9px 12px;background:#0a1815f7;border-top:2px solid #557650;box-shadow:0 -5px 15px #080d1077}body[data-view="mission"] .control-buttons .button{grid-column:auto;font-size:.8rem;padding:9px 5px;min-height:39px}#result-shortcut:not([hidden]){display:block}}
+.campaign-teaser{border-color:var(--region-accent);background:linear-gradient(110deg,var(--adventure-ground,#173326),var(--adventure-dark,#12221f) 75%)}
+.chapter-story,.notebook{background:var(--adventure-dark,#13251f);border-color:var(--region-accent)}
+.world{background:var(--adventure-ground);border-color:var(--region-accent)}
+.stage-frame{background:var(--adventure-dark)}
+.story-reward{background:var(--adventure-dark);color:var(--ink)}
+.scene-observation{padding:9px 14px;border-top:1px solid var(--line);color:var(--mint);font:.8rem var(--mono);overflow-wrap:anywhere;line-height:1.5;min-height:38px}
+.story-bottom .button{white-space:normal;text-align:left;max-width:100%}
+.world-panel{scroll-margin-top:12px}
