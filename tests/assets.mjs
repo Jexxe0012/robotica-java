@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {readFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import '../web/worlds.js';
-import '../web/chapter-one.js';
 import '../web/campaign.js';
-import worker from '../dist/server/index.js';
+import worker,{ASSET_VERSION} from '../dist/server/index.js';
+import {loadStaticAssets} from '../scripts/static-assets.mjs';
+const {assets:expectedAssets,version:expectedVersion}=await loadStaticAssets();
+assert.equal(ASSET_VERSION,expectedVersion,'Build matches the current source');
 
 const regions=globalThis.AtlasWorlds;
 assert.equal(regions.length,9,'Nine chapter regions');
@@ -24,14 +26,14 @@ assert.equal(hashes.size,9,'Nine distinct landscapes, not renamed copies');
 // Test the packaged Worker, including binary bytes and HTTP semantics.
 for(const [url,file,type] of [
  ['/', 'web/index.html', 'text/html'],
+ ['/assets.js','web/assets.js','text/javascript'],
+ ['/landscapes.js','web/landscapes.js','text/javascript'],
  ['/journey.js', 'web/journey.js', 'text/javascript'],
  ['/worlds.js', 'web/worlds.js', 'text/javascript'],
  ['/worlds.css', 'web/worlds.css', 'text/css'],
- ['/robot.css', 'web/robot.css', 'text/css'],
  ['/retro.css', 'web/retro.css', 'text/css'],
  ['/adventure-scene.js', 'web/adventure-scene.js', 'text/javascript'],
  ['/campaign.js', 'web/campaign.js', 'text/javascript'],
- ['/chapter-one.js', 'web/chapter-one.js', 'text/javascript'],
  ['/adventure-ui.js', 'web/adventure-ui.js', 'text/javascript'],
  ['/adventure-audio.js', 'web/adventure-audio.js', 'text/javascript'],
  ['/adventure.css', 'web/adventure.css', 'text/css'],
@@ -47,7 +49,9 @@ for(const [url,file,type] of [
  const response=await worker.fetch(new Request('https://example.test'+url),{});
  assert.equal(response.status,200,url);
  assert(response.headers.get('content-type').startsWith(type),url+' MIME');
- assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile(file),url+' bytes');
+ const source=expectedAssets[url==='/'?'/index.html':url];
+ const expected=source.binary?await readFile(file):Buffer.from(source.body);
+ assert.deepEqual(Buffer.from(await response.arrayBuffer()),expected,url+' bytes');
  const head=await worker.fetch(new Request('https://example.test'+url,{method:'HEAD'}),{});
  assert.equal(head.status,200);assert.equal((await head.arrayBuffer()).byteLength,0);
  assert.equal(head.headers.get('content-type'),response.headers.get('content-type'));
@@ -57,4 +61,35 @@ for(const path of ['/missing.png','/assets/../../package.json','/constructor','/
 }
 assert.equal((await worker.fetch(new Request('https://example.test/assets/atlas-crt.png',{method:'POST'}),{})).status,405);
 assert.equal((await worker.fetch(new Request('https://example.test/api/progress'),{})).status,401);
-console.log('PASS: nine unique landscapes and routes; packaged assets, MIME types, HEAD, missing files and API authentication.');
+
+const imagePath='/'+regions[1].image,versioned='https://example.test'+imagePath+'?v='+ASSET_VERSION;
+const cached=await worker.fetch(new Request(versioned),{}),etag=cached.headers.get('etag');
+assert.equal(cached.headers.get('cache-control'),'private, max-age=31536000, immutable');assert(etag);
+assert.deepEqual(Buffer.from(await cached.arrayBuffer()),await readFile('web'+imagePath));
+const repeated=await worker.fetch(new Request(versioned),{});assert.deepEqual(Buffer.from(await repeated.arrayBuffer()),await readFile('web'+imagePath),'Repeated binary response stays intact');
+for(const method of ['GET','HEAD']){
+ const unchanged=await worker.fetch(new Request(versioned,{method,headers:{'if-none-match':'"another", W/'+etag}}),{});
+ assert.equal(unchanged.status,304);assert.equal((await unchanged.arrayBuffer()).byteLength,0);
+}
+assert.equal((await worker.fetch(new Request('https://example.test'+imagePath+'?v=older'),{})).headers.get('cache-control'),'no-cache','Old URLs cannot cache a new deployment forever');
+assert.equal((await worker.fetch(new Request('https://example.test/?v='+ASSET_VERSION),{})).headers.get('cache-control'),'no-cache','HTML always revalidates');
+assert.equal((await worker.fetch(new Request('https://example.test/api/progress'),{})).headers.get('cache-control'),'no-store','Progress is never cached');
+const builtHTML=await (await worker.fetch(new Request('https://example.test/'),{})).text();
+assert(builtHTML.includes(`data-asset-version="${ASSET_VERSION}"`));
+for(const match of builtHTML.matchAll(/(?:src|href)="([^"#]+)"/g))if(!match[1].startsWith('data:'))assert(match[1].includes('?v='+ASSET_VERSION),match[1]+' versioned in HTML');
+
+// Runtime files must have an actual entry point, not just exist in web/.
+const html=await readFile('web/index.html','utf8'),runtime=await readdir('web');
+for(const file of runtime.filter(name=>/\.(css|js)$/.test(name)))assert(html.includes(`"${file}"`),file+' is referenced by the page');
+for(const removed of ['chapter-one.js','phaser-world.js','robot.css']){
+ assert(!runtime.includes(removed),removed+' stays removed');
+ assert.equal((await worker.fetch(new Request('https://example.test/'+removed),{})).status,404);
+}
+const usedAssets=new Set(['assets/PHASER-LICENSE.txt','assets/fonts/OFL.txt',...regions.map(r=>r.image),...ExpeditionCampaign.regions.flatMap(r=>[r.map,r.tiles])]);
+const texts=[html,...await Promise.all(runtime.filter(name=>/\.(css|js)$/.test(name)).map(name=>readFile('web/'+name,'utf8')))];
+for(const text of texts)for(const match of text.matchAll(/assets\/[\w./-]+\.(?:png|webp|ttf|txt|svg)/g))usedAssets.add(match[0]);
+async function inspect(directory,prefix='assets'){
+ for(const entry of await readdir(directory,{withFileTypes:true})){const name=prefix+'/'+entry.name;if(entry.isDirectory())await inspect(directory+'/'+entry.name,name);else assert(usedAssets.has(name),name+' is used by the game or required attribution');}
+}
+await inspect('web/assets');
+console.log('PASS: nine unique landscapes; packaged bytes/MIME/HEAD; private versioned cache, ETag/304, deployment invalidation, API isolation and no orphan runtime files.');

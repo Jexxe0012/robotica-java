@@ -32,5 +32,5 @@
  }
  function result(success){if(success)[523.25,659.25,783.99].forEach((n,i)=>tone(n,.45,i*.12));else tone(196,.24);}
  function init(){button=document.getElementById('audio-toggle');button.addEventListener('click',toggle);document.addEventListener('visibilitychange',refresh);window.addEventListener('pagehide',()=>{active=false;refresh();});}
- globalThis.AdventureAudio={init,observe,result,setActive(value){active=value;refresh();}};
+ globalThis.AdventureAudio={init,observe,result,setActive(value){if(active===value)return;active=value;refresh();}};
 })();

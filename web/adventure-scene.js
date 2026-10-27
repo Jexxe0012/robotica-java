@@ -7,14 +7,14 @@
  const cameraLabels=['Ver mapa completo','Seguir a Miaubit','Área de misión'];
  class AdventureScene extends Phaser.Scene {
   constructor(){super('expedition');this.actors=new Map();this.boxLabels=new Map();this.focused=null;this.terrain=[];}
-  preload(){for(const r of ExpeditionCampaign.regions){this.load.tilemapTiledJSON(r.id+'-map',r.map);this.load.image(r.id+'-tiles',r.tiles);}this.load.spritesheet('miaubit','assets/atlas-directions.png',{frameWidth:627,frameHeight:627});}
+  preload(){for(const r of ExpeditionCampaign.regions){this.load.tilemapTiledJSON(r.id+'-map',SiteAssets.url(r.map));this.load.image(r.id+'-tiles',SiteAssets.url(r.tiles));}this.load.spritesheet('miaubit',SiteAssets.url('assets/atlas-directions.png'),{frameWidth:627,frameHeight:627});}
   create(){
    this.forest=this.add.graphics().setDepth(-1);this.props=this.add.graphics().setDepth(0);this.items=this.add.graphics().setDepth(2);this.focus=this.add.graphics().setDepth(9);
    this.coordinateText=this.add.text(OX+5,OY+5,'',{fontFamily:'monospace',fontSize:'11px',color:'#f0d394',backgroundColor:'#0b1714',padding:{x:4,y:3}}).setDepth(10);
    this.zoneLabel=this.add.text(OX,OY-22,'ÁREA DE PROGRAMACIÓN · 6 × 5',{fontFamily:'Pixelify Sans, monospace',fontSize:'13px',color:'#b2c899',backgroundColor:'#14291e',padding:{x:5,y:3}}).setDepth(1).setVisible(false);
    this.scale.on('resize',()=>this.configureCamera());
    document.getElementById('show-coordinates').addEventListener('change',()=>this.drawFocus());
-   this.input.on('pointermove',p=>{const cell=this.cellAt(p.x,p.y);if(cell){this.focused=cell;this.drawFocus();}});
+   this.input.on('pointermove',p=>{const cell=this.cellAt(p.x,p.y);if(cell&&(cell.x!==this.focused?.x||cell.y!==this.focused?.y)){this.focused=cell;this.drawFocus();}});
    this.input.on('pointerdown',p=>{const cell=this.cellAt(p.x,p.y);if(cell)this.inspect(cell.x,cell.y);else {const point=this.cameras.main.getWorldPoint(p.x,p.y);if(progress.complete&&point.x>700&&Math.abs(point.y-288)<64)this.continueRegion();}});
    const canvas=this.game.canvas;canvas.tabIndex=0;canvas.setAttribute('role','group');
    canvas.addEventListener('pointerleave',()=>{this.focused=null;this.drawFocus();});
@@ -25,11 +25,12 @@
     this.drawFocus();if(e.key==='Enter'||e.key===' ')this.inspect(this.focused.x,this.focused.y);
    });
    scene=this;this.changeRegion();if(latest)this.setState(latest,true);this.configureCamera();host.setAttribute('aria-busy','false');
-   if(document.body.dataset.view!=='mission')this.scene.sleep();
+   if(document.body.dataset.view!=='mission'){this.scene.sleep();this.game.loop.sleep();}
   }
   changeRegion(){
    for(const layer of this.terrain)layer.destroy();this.terrain=[];this.map?.destroy();
    this.map=this.make.tilemap({key:region.id+'-map'});const tiles=this.map.addTilesetImage(region.id,region.id+'-tiles');
+   this.renderedRegion=region.index;this.worldSignature=null;
    for(const [i,name] of ['Suelo','Senderos','Vegetación'].entries())this.terrain.push(this.map.createLayer(name,tiles,0,0).setScale(2).setDepth(-10+i));
    this.focused=null;this.drawLandscape();this.drawProps();this.drawFocus();
    this.game.canvas.setAttribute('aria-label',`Escenario de ${region.title}. Flechas para explorar el área de programación; Intro para inspeccionar.`);
@@ -63,7 +64,7 @@
    };
    const objects=this.map.getObjectLayer('Historia')?.objects??[];
    const landmarks=region.index===0?region.landmarks:objects.filter(o=>!['beacon','portal'].includes(o.type)).map(o=>[o.type,o.x,o.y,o.properties?.find(p=>p.name==='scale')?.value??1]);
-   const c=value=>parseInt(value.slice(1),16),[ground,dark,path,stone,water,deep,wood,accent,leaf,light]=region.palette.map(c);
+   const c=value=>parseInt(value.slice(1),16),[,dark,path,stone,water,deep,wood,accent,leaf,light]=region.palette.map(c);
    const box=(x,y,w,h,color)=>{g.fillStyle(color);g.fillRect(x,y,w,h);};
    const triangle=(x1,y1,x2,y2,x3,y3,color)=>{g.fillStyle(color);g.fillTriangle(x1,y1,x2,y2,x3,y3);};
    const extents={crystal:[35,30],pine:[47,34],house:[36,32],manor:[36,32],gate:[33,34],tower:[33,34],arch:[34,34],pillar:[24,34],hedge:[10,25],fountain:[29,28],dock:[20,30],palm:[38,32],obelisk:[43,32],observatory:[51,33]};
@@ -135,18 +136,18 @@
    if(this.focused){const {x,y}=this.focused;this.focus.lineStyle(3,0xf0c564);this.focus.strokeRect(OX+x*TILE+2,OY+y*TILE+2,TILE-4,TILE-4);this.coordinateText.setText(`(${x}, ${y})`).setPosition(OX+x*TILE+3,OY+y*TILE+3);}
    else this.coordinateText.setText('Origen (0, 0)').setPosition(OX+3,OY+3);
   }
-  idle(actor){if(reduced())return;actor.idle=this.tweens.add({targets:actor.sprite,angle:{from:-.7,to:.7},duration:1100,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});}
+  idle(actor){if(reduced())return;this.tweens.add({targets:actor.sprite,angle:{from:-.7,to:.7},duration:1100,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});}
   spark(x,y,color=0xf0c564,count=8){
    if(reduced())return;for(let i=0;i<count;i++){const a=i/count*Math.PI*2,p=this.add.rectangle(x,y,4,4,color).setDepth(8);this.tweens.add({targets:p,x:x+Math.cos(a)*30,y:y+Math.sin(a)*25,alpha:0,duration:500,onComplete:()=>p.destroy()});}
   }
   setState(state,snap=false){
-   this.state=state;this.paintItems();const robots=state.objects.filter(o=>o.robot),live=new Set(robots.map(o=>o.id));
+   this.state=state;const signature=JSON.stringify(state.world);if(signature!==this.worldSignature){this.worldSignature=signature;this.paintItems();}const robots=state.objects.filter(o=>o.robot),live=new Set(robots.map(o=>o.id));
    for(const [id,a] of this.actors)if(!live.has(id)){this.tweens.killTweensOf([a.sprite,a.label,a.shadow,a.cargo]);a.sprite.destroy();a.label.destroy();a.shadow.destroy();a.cargo.destroy();this.actors.delete(id);}
    for(const [index,o] of robots.entries()){
     const r=o.robot,overlap=robots.filter(other=>other.robot.x===r.x&&other.robot.y===r.y),offset=(overlap.findIndex(other=>other.id===o.id)-(overlap.length-1)/2)*20,x=OX+(r.x+.5)*TILE+offset,y=OY+(r.y+.53)*TILE;let a=this.actors.get(o.id);
     if(!a){
      a={sprite:this.add.sprite(x,y,'miaubit',frames[r.dir]).setOrigin(.5,.62).setDepth(5+index),label:this.add.text(x,y+24,r.name,{fontFamily:'Pixelify Sans, monospace',fontSize:'11px',color:'#eef1d6',backgroundColor:'#14241b',padding:{x:3,y:1}}).setOrigin(.5,0).setDepth(10),shadow:this.add.ellipse(x,y+20,35,11,0x0a1710,.4).setDepth(3),cargo:this.add.rectangle(x+22,y-8,11,11,0xf0c564).setStrokeStyle(1,0xffe8a3).setDepth(8),x:r.x,y:r.y,load:r.cargo};
-     this.actors.set(o.id,a);a.sprite.setDisplaySize(53,53);this.idle(a);
+     this.actors.set(o.id,a);a.sprite.setDisplaySize(53,53);
     }
     this.tweens.killTweensOf([a.sprite,a.label,a.shadow,a.cargo]);a.sprite.setFrame(frames[r.dir]).setDisplaySize(53,53).setAngle(0);a.sprite.setTint(index?0x9fc2dd:0xffffff);a.cargo.setVisible(r.cargo>0);
     a.label.setText(`${r.name}${mission?.chapter>=5?' · #'+o.id:''}`);a.sprite.setData('objectId',o.id);a.sprite.setData('robotName',r.name);
@@ -164,6 +165,18 @@
   celebrate(success){if(!success||!this.state)return;const actor=this.actors.values().next().value;if(actor){this.spark(actor.sprite.x,actor.sprite.y-15,0xf0c564,16);if(!reduced()){this.tweens.killTweensOf(actor.sprite);actor.sprite.setAngle(0);this.tweens.add({targets:actor.sprite,y:actor.sprite.y-9,duration:150,yoyo:true,onComplete:()=>this.idle(actor)});}}}
  }
  function mount(){if(game)return;game=new Phaser.Game({type:Phaser.AUTO,parent:host,width:host.clientWidth||720,height:host.clientHeight||520,transparent:false,backgroundColor:region.palette[1],render:{pixelArt:true,antialias:false,roundPixels:true},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[AdventureScene]});}
- function setActive(active){host.hidden=!active;if(active){if(!game)mount();else scene?.scene.wake();}else scene?.scene.sleep();}
- globalThis.ExpeditionWorld={host,setActive,setState(state,snap){latest=state;if(document.body.dataset.view==='mission')host.hidden=false;if(scene)scene.setState(state,snap);else if(document.body.dataset.view==='mission')mount();},setMission(m){const changed=region.index!==m.chapter;mission=m;region=ExpeditionCampaign.chapter(m.chapter);progress=ExpeditionCampaign.derive(m.chapter,[]);cameraMode=window.innerWidth<=850?0:1;if(scene){if(changed)scene.changeRegion();scene.configureCamera();}return cameraLabels[cameraMode];},setProgress(value){progress=value;scene?.drawProps();},cycleCamera(){cameraMode=(cameraMode+1)%3;scene?.configureCamera();return cameraLabels[cameraMode];},celebrate(success){scene?.celebrate(success);}};
+ function syncScene(snap=true){if(!scene)return;if(scene.renderedRegion!==region.index)scene.changeRegion();scene.drawProps();if(latest)scene.setState(latest,snap);scene.configureCamera();}
+ function setActive(active){
+  host.hidden=!active;
+  if(active){if(!game)mount();else{game.loop.wake();scene?.scene.wake();syncScene();}}
+  else{scene?.scene.sleep();game?.loop.sleep();}
+ }
+ globalThis.ExpeditionWorld={
+  host,setActive,
+  setState(state,snap){latest=state;if(document.body.dataset.view!=='mission')return;host.hidden=false;if(scene){if(scene.renderedRegion!==region.index)scene.changeRegion();scene.setState(state,snap);}else mount();},
+  setMission(m){mission=m;if(region.index!==m.chapter){region=ExpeditionCampaign.chapter(m.chapter);progress=ExpeditionCampaign.derive(m.chapter,[]);}cameraMode=window.innerWidth<=850?0:1;document.getElementById('camera-mode').textContent=cameraLabels[cameraMode];},
+  setProgress(value){const changed=JSON.stringify(progress)!==JSON.stringify(value);progress=value;if(changed&&scene?.renderedRegion===region.index&&!host.hidden)scene.drawProps();},
+  cycleCamera(){cameraMode=(cameraMode+1)%3;scene?.configureCamera();return cameraLabels[cameraMode];},
+  celebrate(success){scene?.celebrate(success);}
+ };
 })();

@@ -1,5 +1,57 @@
 'use strict';
 (() => {
+ const albaBeats=[
+ [
+  "La primera baliza",
+  "El guardián del Árbol del Alba perdió la luz del sendero. Localiza la primera baliza siguiendo tres instrucciones.",
+  "Una secuencia correcta ilumina el primer tramo."
+ ],
+ [
+  "Un núcleo para el camino",
+  "Dentro de esta caja hay un núcleo de luz. Recógela y llévala al destino para encender el farol del sendero.",
+  "El farol del sendero recupera su luz."
+ ],
+ [
+  "El sendero del sur",
+  "La brújula de Miaubit señala al este. Descubre qué ocurre al girar antes de avanzar.",
+  "Ahora sabes distinguir un giro de un movimiento."
+ ],
+ [
+  "Calibrar la brújula",
+  "El sendero correcto está al norte. Encuentra la instrucción equivocada y corrige el trayecto.",
+  "La brújula vuelve a señalar el camino correcto."
+ ],
+ [
+  "Mira antes de avanzar",
+  "Moverse hacia el este no cambia hacia dónde mira Miaubit. Usa esa diferencia para encontrar la siguiente señal.",
+  "Aprendiste a observar orientación y posición por separado."
+ ],
+ [
+  "Rodear la roca",
+  "Una roca bloquea el sendero. Ordena una ruta que la rodee y regrese al destino.",
+  "Las marcas del desvío se encienden entre los árboles."
+ ],
+ [
+  "Cargar la baliza cercana",
+  "La caja ya está a tus pies. Corrige el programa para recogerla antes de entregarla.",
+  "La baliza cercana recibe su núcleo."
+ ],
+ [
+  "Tu propia ruta",
+  "El guardián confía en ti: escribe un trayecto hasta la señal marcada.",
+  "Ya puedes crear un camino con tus propias instrucciones."
+ ],
+ [
+  "Un mensaje al guardián",
+  "Miaubit debe comunicar dónde está. Mueve el robot y usa la consola para informar su coordenada.",
+  "El guardián recibe tu primer mensaje Java."
+ ],
+ [
+  "La entrega del Alba",
+  "Combina lo aprendido: recoge el núcleo, rodea la roca, entrega y comunica el resultado.",
+  "La entrega final está lista."
+ ]
+];
  const definitions=[
   {id:'alba',theme:'forest',quest:'Devuelve la luz al sendero',restored:'El puente del Alba vuelve a brillar',unit:'balizas',finish:'El puente del Alba se ilumina.',
    brief:'Ayuda al guardián a devolver la luz al sendero siguiendo instrucciones en orden.',
@@ -139,7 +191,7 @@
  function chapter(index){return regions[index]??null;}
  function forMission(id){return regions.find(r=>r.ids.includes(id))??null;}
  function derive(index,completed){const r=chapter(index);if(!r)return null;const done=new Set(completed),count=r.ids.filter(id=>done.has(id)).length;return {chapter:index,count,total:r.ids.length,beacon:done.has(r.ids[1]),trail:done.has(r.ids[5]),complete:count===r.ids.length};}
- function mission(id){const r=forMission(id);if(!r)return null;if(r.index===0)return AlbaChapter.mission(id);const i=r.ids.indexOf(id);return {title:`${r.unit[0].toUpperCase()+r.unit.slice(1)} · ${i+1} de 10`,story:r.stories[i],reward:`Una ${r.unit==='cristales'?'pieza del archivo':r.unit==='sellos'?'marca de la puerta':r.unit==='muelles'?'señal del muelle':'nueva luz'} queda restaurada en ${r.title}.`};}
+ function mission(id){const r=forMission(id);if(!r)return null;if(r.index===0){const [title,story,reward]=albaBeats[r.ids.indexOf(id)];return {title,story,reward};}const i=r.ids.indexOf(id);return {title:`${r.unit[0].toUpperCase()+r.unit.slice(1)} · ${i+1} de 10`,story:r.stories[i],reward:`Una ${r.unit==='cristales'?'pieza del archivo':r.unit==='sellos'?'marca de la puerta':r.unit==='muelles'?'señal del muelle':'nueva luz'} queda restaurada en ${r.title}.`};}
  function reward(id,completed){const r=forMission(id);if(!r)return '';const state=derive(r.index,completed);if(state.complete)return r.finish+(r.index===8?' ¡Completaste esta región! Revisa las misiones pendientes de tu expedición.':` Te espera ${regions[r.index+1].title}.`);return mission(id).reward+(id===r.ids.at(-1)?' Resuelve las misiones pendientes para restaurar toda la región.':'');}
  globalThis.ExpeditionCampaign={regions,chapter,forMission,derive,mission,reward};
 })();

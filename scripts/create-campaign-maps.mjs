@@ -1,6 +1,5 @@
 import {mkdir,writeFile} from 'node:fs/promises';
 import '../web/worlds.js';
-import '../web/chapter-one.js';
 import '../web/campaign.js';
 
 // Original pixel tiles and distinct layouts. Run explicitly: never during build.
