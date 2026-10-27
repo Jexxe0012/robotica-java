@@ -34,6 +34,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Verificar 90 misiones y persistencia
         run: npm test
+      - name: Verificar mapa y progreso de aventura
+        run: npm run test:adventure
       - name: Compilar y ejecutar las 90 exportaciones Java
         run: npm run test:java
       - name: Construir el Worker

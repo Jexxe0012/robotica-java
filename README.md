@@ -1,6 +1,6 @@
 # Robótica Java · Lógica y POO
 
-Aventura educativa en español con **90 misiones**, construida a partir de la primera versión Huerto Java. Se aprende a leer, predecir, ordenar, depurar y escribir código, con Atlas en un entorno 2D pixel art y un inspector de variables, objetos, referencias y llamadas.
+Aventura educativa en español con **90 misiones**, construida a partir de la primera versión Huerto Java. Se aprende a leer, predecir, ordenar, depurar y escribir código, con Miaubit en un entorno 2D pixel art y un inspector de variables, objetos, referencias y llamadas.
 
 - **Repositorio:** [Jexxe0012/robotica-java](https://github.com/Jexxe0012/robotica-java).
 - **Despliegue privado:** [Abrir Robótica Java](https://huerto-java-josue.sandobaljosue16.chatgpt.site).
@@ -8,9 +8,11 @@ Aventura educativa en español con **90 misiones**, construida a partir de la pr
 
 El proyecto enseña Java, mientras que la aplicación web y el intérprete están implementados en JavaScript. Phaser 4 renderiza el tablero 2D; el intérprete Java sigue determinando los movimientos y el resultado de cada misión. Los ejercicios descargables se ejecutan con un JDK real. No requiere Minecraft ni un servidor de Minecraft.
 
-## Aventura de Atlas
+## La expedición de Miaubit
 
-La interfaz presenta un camino de diez misiones por capítulo, ilustraciones pixel art y Atlas como personaje del escenario. El mapa incluye las 90 misiones originales, permite explorar cualquier capítulo y marca las finalizaciones reales del usuario. La aventura está integrada en `main` y utiliza los estados del intérprete para animar a los robots.
+La interfaz presenta un camino de diez misiones por capítulo, ilustraciones pixel art y Miaubit como personaje del escenario. El mapa incluye las 90 misiones originales, permite explorar cualquier capítulo y marca las finalizaciones reales del usuario. La aventura utiliza los estados del intérprete para animar a los robots.
+
+El primer capítulo incorpora **el sendero del Alba**: un escenario editable en formato Tiled, una historia para las diez misiones, balizas que se encienden con las finalizaciones reales y un puente que recupera su luz al completar el capítulo. La cámara permite ver el mapa, seguir a Miaubit o concentrarse en el área de programación. En móvil los controles de ejecución permanecen a mano; el cuaderno se abre desde **Entender el código**. El sonido es opcional y comienza apagado. Consulta la [arquitectura, los recursos y las comprobaciones de esta aventura](docs/alba-adventure.md).
 
 Para ejecutar el juego localmente después de clonar el repositorio:
 
@@ -22,17 +24,17 @@ npm run dev
 
 Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y una misión puede abrirse directamente con `#m51`. Escape o **Mapa de capítulos** vuelve al camino y pausa la ejecución. **Pausar**, **Continuar**, **Paso a paso** y **Reiniciar prueba** permiten observar los cambios. La opción **Coordenadas** muestra las posiciones sin recargar la escena.
 
-`web/journey.js` se ocupa del camino de capítulos, la navegación, el HUD y la lista de casillas accesible. `web/phaser-world.js` crea una escena Phaser independiente para la misión: dibuja el terreno y los obstáculos como mosaicos, marca destinos y estaciones, y anima el sprite de Atlas entre posiciones. El tablero se puede inspeccionar con el ratón, el tacto o las flechas del teclado. El motor entrega instantáneas del estado después de cada instrucción; Phaser solo las presenta y nunca ejecuta Java. Un reinicio coloca a los personajes en el estado inicial. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
+`web/journey.js` se ocupa del camino de capítulos, la navegación, el HUD y la lista de casillas accesible. `web/phaser-world.js` crea una escena Phaser independiente para la misión: dibuja el terreno y los obstáculos como mosaicos, marca destinos y estaciones, y anima el sprite de Miaubit entre posiciones. El tablero se puede inspeccionar con el ratón, el tacto o las flechas del teclado. El motor entrega instantáneas del estado después de cada instrucción; Phaser solo las presenta y nunca ejecuta Java. Un reinicio coloca a los personajes en el estado inicial. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
 
 El paquete `phaser` se fija en `package-lock.json`; el build publica su distribución minificada junto con el Worker, sin descargarla desde un CDN al abrir el juego. Para desarrollo local, `scripts/dev.mjs` sirve esa distribución desde `node_modules`. Se conserva la licencia MIT de Phaser en `web/assets/PHASER-LICENSE.txt`.
 
 Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
 
-La interfaz utiliza una paleta de fantasía oscura: negro verdoso, bosque, jade y ámbar, con acentos propios por región. `web/retro.css` añade tipografía pixel, marcos con relieve, progreso segmentado y textura estática sobre los paisajes. Las superficies de los controles son oscuras; los colores brillantes se reservan para texto, foco y estado. Las lecciones y el código usan tipografías de lectura y no llevan filtros ni líneas de pantalla. La fuente variable Pixelify Sans se sirve desde `web/assets/fonts/`, junto con su licencia OFL, sin depender de una descarga externa al abrir el juego. El cuaderno de Atlas explica cada capítulo en lenguaje sencillo, conecta la idea con la misión actual y permite desplegar definiciones de las palabras y símbolos presentes en el código. Consulta la [paleta y los criterios de presentación](docs/retro-theme.md).
+La interfaz utiliza una paleta de fantasía oscura: negro verdoso, bosque, jade y ámbar, con acentos propios por región. `web/retro.css` añade tipografía pixel, marcos con relieve, progreso segmentado y textura estática sobre los paisajes. Las superficies de los controles son oscuras; los colores brillantes se reservan para texto, foco y estado. Las lecciones y el código usan tipografías de lectura y no llevan filtros ni líneas de pantalla. La fuente variable Pixelify Sans se sirve desde `web/assets/fonts/`, junto con su licencia OFL, sin depender de una descarga externa al abrir el juego. El cuaderno de Miaubit explica cada capítulo en lenguaje sencillo, conecta la idea con la misión actual y permite desplegar definiciones de las palabras y símbolos presentes en el código. Consulta la [paleta y los criterios de presentación](docs/retro-theme.md).
 
-Atlas es un explorador pixel art con cabeza de monitor CRT, carcasa crema y oliva, sonrisa amarilla y núcleo de cristal. Su retrato transparente es `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene las cuatro orientaciones en una hoja 2 × 2. `web/robot.css` selecciona la vista según `robot.dir`: este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. Consulta el [diseño, referencia e integración de Atlas](docs/atlas-design.md) y sus [prompts completos](docs/atlas-prompts.json).
+Miaubit es un gato robótico de cuerda, plateado y violeta, con ojos y llave dorados. Su retrato transparente conserva el nombre de archivo `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene sus cuatro orientaciones en una hoja 2 × 2. El motor mantiene las direcciones este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. Los documentos de [diseño de Atlas](docs/atlas-design.md) y sus [prompts](docs/atlas-prompts.json) conservan la historia del personaje anterior.
 
-Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. El mismo paisaje ambienta el mapa, el retrato de Atlas y el escenario de sus misiones. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos de los paisajes](docs/art-prompts.json).
+Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. El mismo paisaje ambienta el mapa, el retrato de Miaubit y el escenario de sus misiones. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos de los paisajes](docs/art-prompts.json).
 
 El build incorpora PNG y WebP como recursos binarios del Worker y conserva sus tipos MIME; el servidor local sirve los mismos archivos. Verificar el empaquetado con `npm run build` y después `node tests/assets.mjs`. Las comprobaciones incluyen nueve imágenes distintas, nueve rutas de diez puntos y las respuestas GET/HEAD. El motor Java, los evaluadores, los borradores de sesión y el contrato de persistencia se conservan.
 
@@ -98,10 +100,10 @@ robotica-java/
     ├── index.html             # Estructura y controles accesibles
     ├── styles.css             # Diseño de escritorio y móvil
     ├── app.js                 # Interacciones, reproducción y sincronización
-    ├── journey.js             # Camino de niveles y representación de Atlas
+    ├── journey.js             # Camino de niveles y representación de Miaubit
     ├── worlds.js              # Regiones, paisajes, rutas y colores del terreno
     ├── worlds.css             # Presentación de las regiones y navegación móvil
-    ├── robot.css              # Sprite direccional de Atlas y movimiento reducido
+    ├── robot.css              # Sprite direccional de Miaubit y movimiento reducido
     ├── retro.css              # Tipografía pixel, marcos, texturas y estados oscuros
     ├── learning-guide.css     # Bitácora por nivel y glosario contextual
     ├── assets/                # Retrato, hoja direccional y nueve mapas WebP
@@ -234,7 +236,7 @@ Si cambia el número de misiones, también deben actualizarse los contadores, el
 - 90 soluciones verificadas con el intérprete y el evaluador; 63 estados iniciales sin resolver.
 - Casos de errores de tipos, null, acceso private, índices, alcance, recursión y bucles; identidad compartida y paso por valor.
 - API ejecutada contra SQLite real: aislamiento entre usuarios, progreso monotónico, entradas inválidas, origen y fallo de almacenamiento.
-- Las 90 exportaciones compiladas y ejecutadas con Eclipse Temurin JDK 21; consola y estado final de Atlas comparados con la simulación.
+- Las 90 exportaciones compiladas y ejecutadas con Eclipse Temurin JDK 21; consola y estado final de Miaubit comparados con la simulación.
 - Pruebas de navegador: predicción equivocada y correcta, paso a paso, ordenar, corregir, private, referencias, proyecto final, persistencia tras recarga y recuperación tras fallo de conexión. Vista móvil a 390 × 844, navegación y ausencia de desbordamiento de la página.
 
 Para repetir la integración Java después de `node tests/check.mjs`, proporcionar el directorio de un JDK a `node tests/java.mjs /ruta/al/jdk`. El JDK portátil utilizado para verificación queda en `.sites-runtime/`, fuera del repositorio y del despliegue.
