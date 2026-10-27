@@ -14,14 +14,19 @@
     return node;
   }
   function view(name, focus = false) {
+    const previous=document.body.dataset.view,returnHash=previous==='mission'&&current?'#'+current.id:previous==='map'&&current?'#map-'+(current.chapter+1):previous==='achievements'?null:'#home';
     $('route').hidden = name !== 'map';
     $('mission-view').hidden = name !== 'mission';
+    $('home-view').hidden=name!=='home';$('achievements-view').hidden=name!=='achievements';
     document.body.dataset.view = name;
     globalThis.AdventureAudio?.setActive(name==='mission');
     ChapterLandscapes.setVisible(name==='map');
     $('route-toggle').setAttribute('aria-expanded', String(name === 'map'));
-    document.querySelector('.skip-link').href = name === 'map' ? '#journey-title' : '#mission-title';
-    if (focus) $(name === 'map' ? 'journey-title' : 'mission-title').focus({preventScroll:true});
+    $('achievements-nav').setAttribute('aria-expanded',String(name==='achievements'));
+    const heading={home:'home-title',achievements:'achievements-title',map:'journey-title',mission:'mission-title'}[name];
+    document.querySelector('.skip-link').href = '#'+heading;
+    GameHub.show(name,returnHash);
+    if (focus) $(heading).focus({preventScroll:true});
     window.scrollTo({top:0, behavior:'instant'});
     if(name==='mission') requestAnimationFrame(()=>{if(document.body.dataset.view==='mission')globalThis.ExpeditionWorld?.setActive(true);});
     else globalThis.ExpeditionWorld?.setActive(false);
@@ -30,6 +35,16 @@
     pause();
     history.replaceState(null, '', '#map-' + (current.chapter + 1));
     view('map', true);
+  }
+  function navigate(hash){pause();if(location.hash===hash)handleRoute();else location.hash=hash;}
+  function handleRoute(){
+    if(['#home-title','#achievements-title','#journey-title','#mission-title'].includes(location.hash))return;
+    pause();
+    const mission=levels.find(m=>'#'+m.id===location.hash),chapterIndex=Number(location.hash.match(/^#map-(\d+)$/)?.[1])-1;
+    if(mission){if(current?.id===mission.id)view('mission',true);else choose(mission,true);}
+    else if(chapterIndex>=0&&chapterIndex<chapters.length){if(current?.chapter===chapterIndex)view('map',true);else chapter(chapterIndex);}
+    else if(location.hash==='#logros')view('achievements',true);
+    else{if(location.hash&&location.hash!=='#home')history.replaceState(null,'','#home');view('home',true);}
   }
   function chapter(index) {
     const missions = missionsByChapter[index];
@@ -161,18 +176,14 @@
     $('enter-mission').addEventListener('click', () => choose(current, true));
     $('route-toggle').addEventListener('click', openMap);
     $('feedback-map').addEventListener('click', openMap);
-    $('brand-home').addEventListener('click', event => { event.preventDefault(); openMap(); });
+    $('brand-home').addEventListener('click', event => { event.preventDefault(); navigate('#home'); });
     $('previous-chapter').addEventListener('click', () => chapter(current.chapter-1));
     $('next-chapter').addEventListener('click', () => chapter(current.chapter+1));
     document.addEventListener('atlas:tile-inspect',event=>{$('world-status').textContent=event.detail.summary;});
-    window.addEventListener('keydown', event => { if (event.key === 'Escape' && document.body.dataset.view === 'mission') openMap(); });
-    window.addEventListener('hashchange', () => {
-      const mission = levels.find(m => '#'+m.id === location.hash);
-      const chapterIndex = Number(location.hash.match(/^#map-(\d+)$/)?.[1])-1;
-      if (mission) choose(mission, true);
-      else if (chapterIndex >= 0 && chapterIndex < chapters.length) { chapter(chapterIndex); view('map'); }
-    });
-    view(/^#m\d{2}$/.test(location.hash) ? 'mission' : 'map');
+    window.addEventListener('keydown', event => { if(event.key!=='Escape')return;if(document.body.dataset.view==='mission')openMap();else if(document.body.dataset.view==='achievements')$('achievements-back').click(); });
+    window.addEventListener('hashchange',handleRoute);
+    const chapterIndex=Number(location.hash.match(/^#map-(\d+)$/)?.[1])-1;
+    view(levels.some(m=>'#'+m.id===location.hash)?'mission':chapterIndex>=0&&chapterIndex<chapters.length?'map':location.hash==='#logros'?'achievements':'home');
   }
-  globalThis.AtlasAdventure = {init, route, world, view, celebrate};
+  globalThis.AtlasAdventure = {init, route, world, view, celebrate,navigate};
 })();

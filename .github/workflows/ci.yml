@@ -36,6 +36,8 @@ jobs:
         run: npm test
       - name: Verificar mapa y progreso de aventura
         run: npm run test:adventure
+      - name: Verificar logros y continuación de la aventura
+        run: npm run test:achievements
       - name: Compilar y ejecutar las 90 exportaciones Java
         run: npm run test:java
       - name: Construir el Worker
