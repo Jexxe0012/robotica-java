@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import '../web/worlds.js';
+import '../web/chapter-one.js';
+import '../web/campaign.js';
 import worker from '../dist/server/index.js';
 
 const regions=globalThis.AtlasWorlds;
@@ -27,13 +29,15 @@ for(const [url,file,type] of [
  ['/worlds.css', 'web/worlds.css', 'text/css'],
  ['/robot.css', 'web/robot.css', 'text/css'],
  ['/retro.css', 'web/retro.css', 'text/css'],
- ['/alba-scene.js', 'web/alba-scene.js', 'text/javascript'],
+ ['/adventure-scene.js', 'web/adventure-scene.js', 'text/javascript'],
+ ['/campaign.js', 'web/campaign.js', 'text/javascript'],
  ['/chapter-one.js', 'web/chapter-one.js', 'text/javascript'],
  ['/adventure-ui.js', 'web/adventure-ui.js', 'text/javascript'],
  ['/adventure-audio.js', 'web/adventure-audio.js', 'text/javascript'],
  ['/adventure.css', 'web/adventure.css', 'text/css'],
  ['/assets/maps/alba-village.json', 'web/assets/maps/alba-village.json', 'application/json'],
  ['/assets/tiles/alba.svg', 'web/assets/tiles/alba.svg', 'image/svg+xml'],
+ ...ExpeditionCampaign.regions.slice(1).flatMap(r=>[['/'+r.map,'web/'+r.map,'application/json'],['/'+r.tiles,'web/'+r.tiles,'image/svg+xml']]),
  ['/assets/fonts/pixelify-sans.ttf', 'web/assets/fonts/pixelify-sans.ttf', 'font/ttf'],
  ['/assets/fonts/OFL.txt', 'web/assets/fonts/OFL.txt', 'text/plain'],
  ['/assets/atlas-crt.png', 'web/assets/atlas-crt.png', 'image/png'],
