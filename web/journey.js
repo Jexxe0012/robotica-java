@@ -16,6 +16,7 @@
     $('route').hidden = name !== 'map';
     $('mission-view').hidden = name !== 'mission';
     document.body.dataset.view = name;
+    globalThis.AdventureAudio?.setActive(name==='mission');
     $('route-toggle').setAttribute('aria-expanded', String(name === 'map'));
     document.querySelector('.skip-link').href = name === 'map' ? '#journey-title' : '#mission-title';
     if (focus) $(name === 'map' ? 'journey-title' : 'mission-title').focus({preventScroll:true});

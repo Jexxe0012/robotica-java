@@ -1,7 +1,9 @@
 'use strict';
 // Phaser owns only the 2D presentation; JavaCourse and RobotJava remain authoritative.
 (() => {
-  const host = document.getElementById('phaser-world');
+  const host = document.createElement('div');
+  host.className='scene-surface';host.id='classic-world';document.getElementById('phaser-world').append(host);
+  let activeMission=null;
   const frames = [2, 0, 3, 1];
   const arrows = ['→', '↓', '←', '↑'];
   let game = null, scene = null, latestState = null;
@@ -225,13 +227,17 @@
   }
   function setState(state,snap=false) {
     if(!state)return;
+    if(activeMission?.chapter===0){AlbaWorld.setState(state,snap);return;}
     latestState=state;
     if(scene)scene.setState(state,snap);
     else if(!game&&document.body.dataset.view==='mission')mount();
   }
   function setActive(active) {
+    if(activeMission?.chapter===0){scene?.scene.sleep();host.hidden=true;AlbaWorld.setActive(active);return;}
+    host.hidden=false;AlbaWorld.setActive(false);
     if(active) { if(!game)mount();else if(scene)scene.scene.wake(); }
     else if(scene)scene.scene.sleep();
   }
-  globalThis.AtlasPhaserWorld={setState,setActive};
+  function setMission(mission){activeMission=mission;host.hidden=mission.chapter===0;const label=AlbaWorld.setMission(mission);if(mission.chapter!==0)AlbaWorld.setActive(false);else scene?.scene.sleep();const button=document.getElementById('camera-mode');if(button)button.textContent=label;}
+  globalThis.AtlasPhaserWorld={setState,setActive,setMission,setProgress:state=>AlbaWorld.setProgress(state),cycleCamera:()=>AlbaWorld.cycleCamera(),celebrate:success=>{if(activeMission?.chapter===0)AlbaWorld.celebrate(success);}};
 })();
