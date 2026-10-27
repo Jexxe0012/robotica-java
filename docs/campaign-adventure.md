@@ -16,10 +16,10 @@ Las 90 misiones tienen contexto narrativo, escenario de mosaicos editable y prog
 
 ## Código y estado
 
-- `web/campaign.js` define regiones, recursos, paletas, historias y condiciones de restauración. Las diez narraciones originales del Alba se conservan en `web/chapter-one.js`.
+- `web/campaign.js` define regiones, recursos, paletas, historias y condiciones de restauración. Incluye también las diez narraciones del Alba, con una única función de progreso para toda la campaña.
 - `derive(chapter, completed)` cuenta solo los identificadores reales del capítulo, elimina duplicados y devuelve `count`, `beacon`, `trail` y `complete`. Las misiones segunda y sexta iluminan marcas parciales; la restauración completa exige las diez misiones. Resolver solo el proyecto final no basta.
-- `web/adventure-scene.js` usa un único juego y una única escena Phaser para toda la campaña. Precarga los nueve mapas y cambia las capas al viajar, reutilizando los recursos cargados. No mantiene nueve renderizadores simultáneos.
-- `web/phaser-world.js` conserva el contrato que usa la interfaz: `setMission`, `setState`, `setActive`, `setProgress`, `cycleCamera` y `celebrate`.
+- `web/adventure-scene.js` usa un único juego y una única escena Phaser para toda la campaña. Precarga los nueve mapas y cambia las capas al viajar, reutilizando los recursos cargados. No mantiene nueve renderizadores simultáneos. En el selector de capítulos detiene el bucle y aplaza la reconstrucción del escenario hasta entrar a una misión.
+- `ExpeditionWorld`, en `web/adventure-scene.js`, expone directamente el contrato que usa la interfaz: `setMission`, `setState`, `setActive`, `setProgress`, `cycleCamera` y `celebrate`.
 - `web/adventure-ui.js` conecta narración, contador, cuaderno, estado observado, cámara y navegación. Continuar aventura elige la primera misión pendiente de la región actual. Los capítulos se pueden explorar libremente: el progreso añade luces, sin bloquear el contenido educativo.
 
 La restauración representa luces, señales y el portal final; no introduce una simulación de ciudad, agua o economía. Las variables y la última salida de consola proceden de la traza real y se muestran después de ejecutar cada instrucción.
@@ -46,6 +46,8 @@ Cada robot del estado tiene un sprite asociado a su identificador de objeto. La 
 Las cámaras permiten ver el mapa, seguir a Miaubit o encuadrar la misión. En móvil se comienza cerca del área lógica; los controles permanecen accesibles y Ver resultado lleva a la explicación. El cuaderno de conceptos y símbolos continúa disponible en todas las misiones. Las flechas inspeccionan casillas sin mover robots.
 
 El audio sigue apagado inicialmente, se activa por elección del usuario y se silencia al abandonar la misión o esconder la pestaña. El movimiento reducido desactiva partículas y animaciones. La lista accesible de casillas y las etiquetas no dependen de los efectos visuales.
+
+Los paisajes de selección se gestionan aparte con `web/landscapes.js`; su carga no bloquea los textos, el progreso ni la escena de una misión. La [revisión de rendimiento](performance.md) documenta la caché y los archivos retirados.
 
 ## Verificación
 

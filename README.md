@@ -24,19 +24,21 @@ npm run dev
 
 Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y una misión puede abrirse directamente con `#m51`. Escape o **Mapa de capítulos** vuelve al camino y pausa la ejecución. **Pausar**, **Continuar**, **Paso a paso** y **Reiniciar prueba** permiten observar los cambios. La opción **Coordenadas** muestra las posiciones sin recargar la escena.
 
-`web/journey.js` se ocupa del camino de capítulos, la navegación, el HUD y la lista de casillas accesible. `web/phaser-world.js` conecta la interfaz con una única escena reutilizable en `web/adventure-scene.js`: carga las capas de la región, marca destinos y estaciones, y anima los objetos robot entre posiciones. Los personajes creados por Java conservan su identidad visual; los objetos que no son robots aparecen en el inspector. El tablero se puede inspeccionar con el ratón, el tacto o las flechas del teclado. El motor entrega instantáneas del estado después de cada instrucción; Phaser solo las presenta y nunca ejecuta Java. Un reinicio coloca a los personajes en el estado inicial. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
+`web/journey.js` se ocupa del camino de capítulos, la navegación, el HUD y la lista de casillas accesible. La interfaz se conecta directamente con una única escena reutilizable en `web/adventure-scene.js`: carga las capas de la región, marca destinos y estaciones, y anima los objetos robot entre posiciones. Los personajes creados por Java conservan su identidad visual; los objetos que no son robots aparecen en el inspector. El tablero se puede inspeccionar con el ratón, el tacto o las flechas del teclado. El motor entrega instantáneas del estado después de cada instrucción; Phaser solo las presenta y nunca ejecuta Java. Un reinicio coloca a los personajes en el estado inicial. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
 
 El paquete `phaser` se fija en `package-lock.json`; el build publica su distribución minificada junto con el Worker, sin descargarla desde un CDN al abrir el juego. Para desarrollo local, `scripts/dev.mjs` sirve esa distribución desde `node_modules`. Se conserva la licencia MIT de Phaser en `web/assets/PHASER-LICENSE.txt`.
 
-Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y colores del terreno. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
+Cada capítulo tiene un paisaje pixel art y una ruta propios. `web/worlds.js` define las nueve regiones: nombre, imagen, texto alternativo, diez posiciones de misiones y acentos de color. `web/worlds.css` adapta el mapa y el tablero a cada región. Los puntos del camino se superponen como botones accesibles; no forman parte de la ilustración. En móvil, los capítulos se recorren en una barra horizontal.
 
 La interfaz utiliza una paleta de fantasía oscura: negro verdoso, bosque, jade y ámbar, con acentos propios por región. `web/retro.css` añade tipografía pixel, marcos con relieve, progreso segmentado y textura estática sobre los paisajes. Las superficies de los controles son oscuras; los colores brillantes se reservan para texto, foco y estado. Las lecciones y el código usan tipografías de lectura y no llevan filtros ni líneas de pantalla. La fuente variable Pixelify Sans se sirve desde `web/assets/fonts/`, junto con su licencia OFL, sin depender de una descarga externa al abrir el juego. El cuaderno de Miaubit explica cada capítulo en lenguaje sencillo, conecta la idea con la misión actual y permite desplegar definiciones de las palabras y símbolos presentes en el código. Consulta la [paleta y los criterios de presentación](docs/retro-theme.md).
 
-Miaubit es un gato robótico de cuerda, plateado y violeta, con ojos y llave dorados. Su retrato transparente conserva el nombre de archivo `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene sus cuatro orientaciones en una hoja 2 × 2. El motor mantiene las direcciones este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. Los documentos de [diseño de Atlas](docs/atlas-design.md) y sus [prompts](docs/atlas-prompts.json) conservan la historia del personaje anterior.
+Miaubit es un gato robótico de cuerda, plateado y violeta, con ojos y llave dorados. Su retrato transparente conserva el nombre de archivo `web/assets/atlas-crt.png`; `web/assets/atlas-directions.png` contiene sus cuatro orientaciones en una hoja 2 × 2. El motor mantiene las direcciones este (0), sur (1), oeste (2) y norte (3). Girar cambia la orientación sin desplazar al personaje. La escena selecciona cada orientación directamente con Phaser; el renderizador CSS del personaje anterior se retiró.
 
-Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1536 × 1024. Estos paisajes ambientan la selección de misiones y el retrato de Miaubit. Los escenarios de ejecución usan los nueve mapas de mosaicos originales en JSON y SVG, con distribución distinta por región. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos de los paisajes](docs/art-prompts.json).
+Los nueve paisajes originales de `web/assets/maps/` se generaron con ImageGen, tomando referencias de Re:Zero buscadas en Pinterest, y se distribuyen como WebP de 1024 × 683. Estos paisajes ambientan la selección de misiones y el retrato de Miaubit. Los escenarios de ejecución usan los nueve mapas de mosaicos originales en JSON y SVG, con distribución distinta por región. Las coordenadas del tablero siguen siendo 6 × 5 y dependen del intérprete. Consulta la [dirección visual, regiones y referencias](docs/art-direction.md) y los [prompts completos de los paisajes](docs/art-prompts.json).
 
 El build incorpora PNG y WebP como recursos binarios del Worker y conserva sus tipos MIME; el servidor local sirve los mismos archivos. Verificar el empaquetado con `npm run build` y después `node tests/assets.mjs`. Las comprobaciones incluyen nueve imágenes distintas, nueve rutas de diez puntos y las respuestas GET/HEAD. El motor Java, los evaluadores, los borradores de sesión y el contrato de persistencia se conservan.
+
+El cambio de capítulo prepara y decodifica el paisaje antes de mostrarlo, anticipa la región siguiente y conserva hasta tres imágenes preparadas. Las URLs versionadas permiten reutilizar los recursos en la caché privada del navegador sin conservar versiones antiguas después de una publicación. Phaser detiene su bucle en el selector de capítulos. Consulta la [medición de rendimiento y la limpieza realizada](docs/performance.md).
 
 ## Arquitectura técnica
 
@@ -90,23 +92,36 @@ robotica-java/
 ├── drizzle/                  # Migraciones SQL y metadatos versionados
 ├── scripts/
 │   ├── build.mjs              # Genera el Worker con los recursos embebidos
+│   ├── static-assets.mjs      # Tipos MIME, versión y ETag de recursos
+│   ├── create-alba-map.mjs    # Generador editable del primer escenario
+│   ├── create-campaign-maps.mjs # Generador de las demás regiones
 │   └── dev.mjs                # Servidor local con SQLite
-├── server/api.js              # API de progreso y validación de solicitudes
+├── server/
+│   ├── api.js                 # API de progreso y validación de solicitudes
+│   └── static.js              # Recursos, caché privada y respuestas condicionales
 ├── tests/
 │   ├── check.mjs              # Misiones, semántica del motor y persistencia
 │   ├── java.mjs               # Compila y ejecuta las 90 exportaciones
+│   ├── adventure.mjs          # Nueve mapas, narración y progreso por capítulo
 │   └── assets.mjs             # Recursos binarios y respuestas HTTP del Worker
 └── web/
     ├── index.html             # Estructura y controles accesibles
     ├── styles.css             # Diseño de escritorio y móvil
     ├── app.js                 # Interacciones, reproducción y sincronización
-    ├── journey.js             # Camino de niveles y representación de Miaubit
-    ├── worlds.js              # Regiones, paisajes, rutas y colores del terreno
+    ├── journey.js             # Camino de niveles, navegación y casillas accesibles
+    ├── worlds.js              # Regiones, paisajes, rutas y acentos
     ├── worlds.css             # Presentación de las regiones y navegación móvil
-    ├── robot.css              # Sprite direccional de Miaubit y movimiento reducido
+    ├── assets.js              # URLs versionadas en producción
+    ├── landscapes.js          # Preparación, carga anticipada y reutilización de paisajes
+    ├── campaign.js            # Historias, paletas y progreso de las nueve regiones
+    ├── adventure-scene.js     # Escena Phaser, sprites y cámara
+    ├── adventure-ui.js        # Historia, cuaderno y controles móviles
+    ├── adventure-audio.js     # Sonidos opcionales sintetizados
+    ├── adventure.css          # Presentación de la aventura
+    ├── phaser-world.css       # Superficie del escenario y lista accesible
     ├── retro.css              # Tipografía pixel, marcos, texturas y estados oscuros
     ├── learning-guide.css     # Bitácora por nivel y glosario contextual
-    ├── assets/                # Retrato, hoja direccional y nueve mapas WebP
+    ├── assets/                # Retrato, sprites, paisajes WebP, mapas Tiled y mosaicos
     ├── engine.js              # Parser, ámbitos, objetos e intérprete
     ├── lessons.js             # Capítulos, misiones, evaluación y guía de conceptos
     └── export.js              # Código Java completo para descargar

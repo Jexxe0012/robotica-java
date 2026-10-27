@@ -28,10 +28,10 @@ Se buscaron e inspeccionaron resultados de Pinterest y vistas de búsqueda de im
 
 ## Integración
 
-Los paisajes de `web/assets/maps/` conservan una resolución de 1536 × 1024 y se codifican en WebP con calidad 82. La conversión solo cambia el formato; no cambia la composición. Los PNG originales se conservan fuera del código de la aplicación. Los [prompts completos](art-prompts.json) documentan la generación de las nueve imágenes.
+Los paisajes de `web/assets/maps/` se publican a 1024 × 683, en WebP con calidad 85. Se redujeron desde los recursos de 1536 × 1024 usando vecino más cercano para mantener los bordes de píxel; la composición se conserva. Los PNG originales se conservan fuera del código de la aplicación. Los [prompts completos](art-prompts.json) documentan la generación de las nueve imágenes.
 
 `web/worlds.js` mantiene los recursos y las rutas como datos. Cada ruta tiene diez puntos diferentes expresados en porcentajes. `web/journey.js` dibuja los enlaces SVG y los botones de misión encima del paisaje y mantiene la selección y el progreso. Las ilustraciones no contienen texto ni controles.
 
-Los colores de terreno y la imagen de la región se aplican también a la vista de misión. Las posiciones, obstáculos, cajas y robots proceden del estado del intérprete; el cambio de región solo afecta su presentación. El tamaño de 6 × 5 del tablero y las reglas de Java y POO se mantienen.
+Los acentos identifican la región. La vista de misión usa los mosaicos y la paleta de `campaign.js`, mientras que la selección conserva los paisajes ilustrados. Las posiciones, obstáculos, cajas y robots proceden del estado del intérprete; el cambio de región solo afecta su presentación. El tamaño de 6 × 5 del tablero y las reglas de Java y POO se mantienen.
 
 `tests/assets.mjs` comprueba que las nueve imágenes tienen contenido diferente, que todas las rutas son distintas y contienen diez puntos, y que el Worker devuelve los bytes originales con `image/webp`, incluidos los recursos anidados. El índice de capítulos permite desplazamiento horizontal en pantallas pequeñas y mantiene controles accesibles por teclado.
