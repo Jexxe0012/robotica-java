@@ -34,8 +34,8 @@
  function prepareStage(){
   $('stage').hidden=!level.stage;replay=null;$('stage-replay').disabled=true;session=null;
   if(!level.stage)return;
-  $('probes-panel').hidden=!level.probes;$('pad-panel').hidden=!level.pad;
-  renderProbes(null);renderPad(null);padInfo('Pulsa Probar para encender tu control.');fitStage();
+  $('probes-panel').hidden=!level.probes;$('pad-panel').hidden=!level.pad;$('hud-panel').hidden=!level.hud;MiaubitStage.setLook(level.look);
+  renderProbes(null);renderPad(null);renderHud(null);padInfo('Pulsa Probar para encender tu control.');fitStage();
   const frame=W.frames({initial:RobotJava.execute('',level.initial??{}).initial,trace:[]})[0],loading=$('stage-loading');
   loading.hidden=false;loading.textContent='Preparando el escenario…';
   MiaubitStage.mount($('stage-canvas')).then(()=>{MiaubitStage.show(frame);loading.hidden=true;describe(frame);}).catch(()=>{loading.textContent='No se pudo cargar el escenario. Revisa tu conexión y recarga la página.';});
@@ -63,6 +63,14 @@
   $('pad-reset').disabled=!session;
  }
  function padInfo(text){$('pad-info').textContent=text;}
+ // The scoreboard shows what the player's objects hold; before a run it shows the level's starting values.
+ function renderHud(result){
+  if(!level?.hud)return;
+  const hud=L.hudOf(level,result),show=value=>value===null||value===undefined?'—':String(value);
+  const total=(level.initial?.boxes??[]).reduce((sum,box)=>sum+box[2],0),energy=level.initial?.robot?.energy??20;
+  const rows=[['Puntos',hud?show(hud.puntos)+(hud.meta!==null?` / ${hud.meta}`:''):'—'],['Energía',show(hud?hud.energia:energy)],['Cristales por recoger',`${show(hud?hud.cristales:total)} de ${total}`]];
+  $('hud').replaceChildren(...rows.flatMap(([term,value])=>[node('dt','',term),node('dd','',value)]));
+ }
  function counterOf(result){
   const final=result.result.final,control=final.objects.find(o=>o.id===final.vars.mando?.objectId),field=Object.entries(control?.fields??{}).find(([,f])=>f.type==='int');
   return field?` · Tu contador ${field[0]}: ${field[1].text}`:'';
@@ -89,10 +97,10 @@
    return;
   }
   s.count=frames.length;s.good=frames.at(-1);run=result;run.presses=s.presses.length;
-  const goal=!!level.play&&L.reached(result,level);
+  const goal=!!level.play&&L.won(level,result);
   await MiaubitStage.play(fresh,{success:goal});
   if(session!==s)return;
-  s.busy=false;describe(s.good);renderOutput();padInfo(`Pulsaciones: ${s.presses.length}${counterOf(result)}`);
+  s.busy=false;describe(s.good);renderOutput();renderHud(result);padInfo(`Pulsaciones: ${s.presses.length}${counterOf(result)}`);
   renderTasks();
  }
  async function playStage(results){
@@ -105,7 +113,7 @@
  function open(projectId){
   const found=projects.find(p=>p.id===projectId);if(!found||!L.count(projectId))return false;
   if(project?.id===projectId&&!$('taller').hidden)return true;
-  project=found;entry=saved.projects[found.id]??={workspace:W.empty(),level:0,done:[]};
+  project=found;entry=saved.projects[found.id]??={workspace:L.startWorkspace(found.id,saved),level:0,done:[]};
   // Continue on the next playable level when the current one is already finished.
   while(entry.done.includes(entry.level)&&L.get(found.id,entry.level+1))entry.level++;
   entry.level=Math.min(entry.level,L.count(found.id)-1);
@@ -286,11 +294,18 @@
   // Objectives are revealed after Miaubit finishes acting out the run, so the celebration never hides it.
   if(level.stage&&run.compiled){
    if(level.probes){await playStage(L.probe(level,entry.workspace));if(id!==runId||!project)return;}
-   else{const last=W.frames(run.result).at(-1);MiaubitStage.show(last);describe(last);}
+   else{
+    // Levels without probes still act out their run, for example the harvest rules picking up crystals.
+    const frames=W.frames(run.result);$('run').disabled=true;
+    await MiaubitStage.play(frames,{bump:W.blocked(run,entry.workspace)});
+    $('run').disabled=false;if(id!==runId||!project)return;describe(frames.at(-1));
+   }
+   renderHud(run);
   }
   if(level.pad){if(run.compiled&&!run.error)startSession();else stopSession('Corrige el error y pulsa Probar para encender tu control.');}
   const state=renderTasks(true),pending=state.tasks.find(t=>!t.done&&t.explain)??state.tasks.find(t=>!t.done);
-  if(run?.compiled&&!run.error&&pending)say(pending.explain??`Tu programa funciona, pero falta esto: ${pending.text}.`,'hint');
+  // A runtime error keeps the interpreter's message unless an objective explains it in mission terms.
+  if(run?.compiled&&pending&&(!run.error||pending.explain))say(pending.explain??`Tu programa funciona, pero falta esto: ${pending.text}.`,run.error?'error':'hint');
  }
  function showOutput(name){for(const tab of ['problems','console','objects']){$('tab-'+tab).setAttribute('aria-selected',String(tab===name));$('out-'+tab).hidden=tab!==name;}}
  function celebrate(){
@@ -299,7 +314,7 @@
   $('level-done-title').textContent='¡Nivel completado!';
   const rest=total-levelIndex-1,coming=rest===1?`El nivel ${total} llega`:rest===2?`Los niveles ${total-1} y ${total} llegan`:`Los niveles ${levelIndex+2} a ${total} llegan`;
   $('level-done-text').textContent=next?`Tu código pasa al siguiente nivel: ${project.levels[levelIndex+1].title}.`:rest>0?`Completaste los niveles disponibles. ${coming} en una próxima actualización; tu proyecto queda guardado en este navegador.`
-   :`¡Terminaste ${project.title}! Lo construiste con clases, objetos, una interfaz y un contador privado.${projects[project.number]?` El Proyecto ${project.number+1}, ${projects[project.number].title}, ya está desbloqueado.`:''}`;
+   :`¡Terminaste ${project.title}! ${project.built}${projects[project.number]?` El Proyecto ${project.number+1}, ${projects[project.number].title}, ya está desbloqueado.`:''}`;
   $('level-next').textContent=next?'Siguiente nivel ▶':'Volver a los proyectos';
   const confetti=dialog.querySelector('.confetti');confetti.replaceChildren();
   if(!reduced())for(let i=0;i<28;i++){const bit=node('i');bit.style.left=`${(i*37)%100}%`;bit.style.background=['#ffd95a','#b3a9d8','#6dbb91','#d59b48'][i%4];bit.style.animationDelay=`${(i%7)*60}ms`;confetti.append(bit);}
@@ -330,7 +345,7 @@
  addEventListener('resize',()=>{if(project&&level?.stage)fitStage();});
  for(const key of $('pad').querySelectorAll('.pad-key'))key.addEventListener('click',()=>pressPad(key.dataset.key));
  $('pad').addEventListener('keydown',e=>{if(KEYS[e.key]){e.preventDefault();pressPad(KEYS[e.key]);}});
- $('pad-reset').addEventListener('click',()=>{if(!session)return;const first=session.first;startSession();if(session){run=session.base;MiaubitStage.show(first);describe(first);renderOutput();renderTasks();}});
+ $('pad-reset').addEventListener('click',()=>{if(!session)return;const first=session.first;startSession();if(session){run=session.base;MiaubitStage.show(first);describe(first);renderOutput();renderHud(run);renderTasks();}});
  for(const tab of ['problems','console','objects'])$('tab-'+tab).addEventListener('click',()=>showOutput(tab));
  const code=$('code');
  code.addEventListener('input',onEdit);

@@ -22,10 +22,20 @@
  const MANDO=Object.freeze({path:'juego/Mando.java',text:'// Archivo del juego: el control virtual llama a presionar\n// con "arriba", "abajo", "derecha" o "izquierda".\ninterface Mando {\n  void presionar(String boton, Robot r);\n}\n'});
  const PAD=Object.freeze({arriba:'norte',abajo:'sur',derecha:'este',izquierda:'oeste'});
  const COLORS=Object.freeze({violeta:'#8f7fd6',dorado:'#ffd95a',rojo:'#e36a5a',verde:'#6dbb91',azul:'#5fa8d8',naranja:'#f0a35a',rosa:'#eaa7ca',celeste:'#8fd3f0',blanco:'#f1edff',gris:'#95ada2'});
- const controlClass=ws=>{const path=Object.keys(ws.files).find(p=>W.basename(p)==='Control.java');return path?classIn(ws,path,'Control'):null;};
+ // A class by name, wherever the player saved its file.
+ const classNamed=(ws,name)=>{const path=Object.keys(ws.files).find(p=>W.basename(p)===name+'.java');return path?classIn(ws,path,name):null;};
+ const controlClass=ws=>classNamed(ws,'Control');
  const CONTROL_BASE='class Control implements Mando {\n  private Boton arriba = new Boton("norte", "violeta");\n  private Boton abajo = new Boton("sur", "violeta");\n  private Boton derecha = new Boton("este", "dorado");\n  private Boton izquierda = new Boton("oeste", "dorado");\n';
  const PRESIONAR='    if (boton.equals("arriba")) { arriba.pulsar(r); }\n    if (boton.equals("abajo")) { abajo.pulsar(r); }\n    if (boton.equals("derecha")) { derecha.pulsar(r); }\n    if (boton.equals("izquierda")) { izquierda.pulsar(r); }\n  }\n';
  const CONTROL=CONTROL_BASE+'\n  public void presionar(String boton, Robot r) {\n'+PRESIONAR+'}\n';
+ // The harvest (project 2): rules in their own folder, and a game turn that moves and then checks the rules.
+ const MARC='reglas/Marcador.java',JUEGO='reglas/Juego.java',stepCode=p=>`mando.presionar("${p}", robot);\njuego.revisar();`;
+ const MARCADOR='class Marcador {\n  private int puntos = 0;\n\n  public void sumar(int n) {\n    if (n > 0) { puntos += n; }\n  }\n\n  public int getPuntos() {\n    return puntos;\n  }\n}\n';
+ const JUEGO_CAMPOS='class Juego {\n  private Robot robot;\n  private Marcador marcador = new Marcador();\n';
+ const JUEGO_RECOGER='  public void revisar() {\n    if (robot.hayCaja()) {\n      robot.recoger();\n      marcador.sumar(1);\n    }\n';
+ const JUEGO_PUNTOS='  public int getPuntos() {\n    return marcador.getPuntos();\n  }\n';
+ const JUEGO_REGLAS=JUEGO_CAMPOS+'\n  Juego(Robot robot) {\n    this.robot = robot;\n  }\n\n'+JUEGO_RECOGER+'  }\n\n'+JUEGO_PUNTOS+'}\n';
+ const JUEGO_META=JUEGO_CAMPOS+'  private int meta;\n\n  Juego(Robot robot, int meta) {\n    this.robot = robot;\n    this.meta = meta;\n  }\n\n'+JUEGO_RECOGER+'    if (robot.getX() == 0 && robot.getY() == 4) {\n      robot.recargar();\n    }\n  }\n\n'+JUEGO_PUNTOS+'\n  public boolean termino() {\n    return marcador.getPuntos() >= meta;\n  }\n}\n';
  const CONTROL_FINAL=CONTROL_BASE.replace('"sur", "violeta"','"sur", "azul"').replace('"oeste", "dorado"','"oeste", "rosa"')+'  private int pulsaciones = 0;\n\n  public void presionar(String boton, Robot r) {\n    pulsaciones++;\n'+PRESIONAR+'\n  public int getPulsaciones() {\n    return pulsaciones;\n  }\n}\n';
  const levels={
   control:[
@@ -99,12 +109,97 @@
     ],
     solution:{name:'Control de Miaubit',folders:['src'],files:{[BOTON]:BOTON_PULSAR,'src/Control.java':CONTROL_FINAL}},
     route:['derecha','arriba','arriba','derecha','derecha','derecha','derecha']}
+  ],
+  cosecha:[
+   {intro:'Tu control del Proyecto 1 llegó a la carpeta control. Un juego necesita además sus reglas: prepara una carpeta para ellas.',
+    game:[MANDO],
+    hints:['Escribe el nombre del proyecto. Selecciona la raíz, pulsa + Carpeta y crea reglas.','Selecciona la carpeta reglas y crea Marcador.java y Juego.java; dentro de cada uno escribe su clase vacía, como class Marcador { }.'],
+    tasks:[
+     task('Ponle nombre al proyecto',ws=>!W.projectNameError(ws.name)),
+     task('Crea la carpeta reglas',ws=>ws.folders.includes('reglas')),
+     task('Crea reglas/Marcador.java con la clase Marcador',ws=>declared(ws,MARC,'Marcador')),
+     task('Crea reglas/Juego.java con la clase Juego',ws=>declared(ws,JUEGO,'Juego'))
+    ],
+    solution:withRules('Cosecha de cristales','class Marcador {\n}\n','class Juego {\n}\n')},
+   {intro:'El marcador guarda los puntos de la cosecha. Nadie debe poder restarle puntos: protege el atributo y valida lo que entra.',
+    game:[MANDO],harness:'Marcador marcador = new Marcador();\nmarcador.sumar(3);\nSystem.out.println(marcador.getPuntos());\nmarcador.sumar(-5);\nmarcador.sumar(0);\nSystem.out.println(marcador.getPuntos());',
+    hints:['En Marcador declara private int puntos = 0; y escribe public int getPuntos() { return puntos; }, como en la misión 62.','Escribe public void sumar(int n) { if (n > 0) { puntos += n; } }: así el marcador rechaza valores negativos o cero, como el contador de la misión 68.'],
+    tasks:[
+     task('Marcador guarda los puntos en un atributo private int',ws=>!!classNamed(ws,'Marcador')?.fields.some(f=>f.type==='int'&&f.mods.includes('private'))),
+     task('sumar(int n) agrega puntos y getPuntos() los devuelve',(ws,run)=>outputOf(run)[0]==='3',{needsRun:true,explain:(ws,run)=>failure(run)??(outputOf(run)[0]!=='3'?`Después de sumar(3), getPuntos() devolvió ${outputOf(run)[0]}. Suma n a los puntos dentro de sumar.`:null)}),
+     task('sumar rechaza los valores que no son positivos',(ws,run)=>outputOf(run).join()==='3,3',{needsRun:true,explain:(ws,run)=>failure(run)??(outputOf(run)[0]==='3'&&outputOf(run)[1]!=='3'?`sumar(-5) y sumar(0) cambiaron los puntos a ${outputOf(run)[1]}. Protege el atributo con if (n > 0), como en la misión 68.`:null)})
+    ],
+    solution:withRules('Cosecha de cristales',MARCADOR,'class Juego {\n}\n')},
+   {intro:'Ahora las reglas: después de cada movimiento, el juego llama a revisar(). Si Miaubit está sobre un cristal, lo recoge y el marcador suma un punto.',
+    game:[MANDO],stage:true,look:'cristales',hud:true,initial:{chargers:[],boxes:[[1,2,1],[3,2,1]]},setup:'Control control = new Control();\nMando mando = control;\nJuego juego = new Juego(robot);',
+    harness:'Control control = new Control();\nMando mando = control;\nJuego juego = new Juego(robot);\n'+['derecha','derecha','derecha'].map(stepCode).join('\n')+'\nSystem.out.println(juego.getPuntos());',
+    hints:['En Juego declara private Robot robot; y private Marcador marcador = new Marcador(); y un constructor Juego(Robot robot) que guarde el robot con this, como el Servicio de la misión 90.','Escribe public void revisar() { if (robot.hayCaja()) { robot.recoger(); marcador.sumar(1); } } y public int getPuntos() { return marcador.getPuntos(); }'],
+    tasks:[
+     task('Juego guarda el robot y un Marcador en atributos private',ws=>{const c=classNamed(ws,'Juego');return ['Robot','Marcador'].every(type=>c?.fields.some(f=>f.type===type&&f.mods.includes('private')));}),
+     task('Un constructor de Juego recibe el robot',ws=>!!classNamed(ws,'Juego')?.methods.some(m=>m.name==='Juego'&&m.params[0]?.type==='Robot')),
+     task('revisar() recoge cada cristal y suma un punto',(ws,run)=>!!run?.compiled&&!run.error&&outputOf(run).at(-1)==='2'&&crystalsLeft(run)===0,{needsRun:true,explain:(ws,run)=>failure(run)??`Miaubit pasó por 2 cristales, pero getPuntos() devolvió ${outputOf(run).at(-1)}. En revisar(), recoge el cristal y llama a marcador.sumar(1).`})
+    ],
+    solution:withRules('Cosecha de cristales',MARCADOR,JUEGO_REGLAS)},
+   {intro:'Miaubit empieza con poca energía. Juego debe recargarla en la estación (0, 4) y saber cuándo se alcanzó la meta.',
+    game:[MANDO],stage:true,look:'cristales',hud:true,initial:{chargers:[[0,4]],boxes:[[2,2,1],[4,2,1]],robot:{energy:3}},setup:'Control control = new Control();\nMando mando = control;\nJuego juego = new Juego(robot, 2);',
+    harness:'Control control = new Control();\nMando mando = control;\nJuego juego = new Juego(robot, 2);\n'+['abajo','abajo','arriba','arriba','derecha','derecha'].map(stepCode).join('\n')+'\nSystem.out.println(juego.termino());\n'+['derecha','derecha'].map(stepCode).join('\n')+'\nSystem.out.println(juego.termino());',
+    hints:['Agrega private int meta; y cambia el constructor a Juego(Robot robot, int meta). Después escribe public boolean termino() { return marcador.getPuntos() >= meta; }, como en la misión 49.','En revisar(), recarga solo en la estación: if (robot.getX() == 0 && robot.getY() == 4) { robot.recargar(); } (misiones 24 y 28).'],
+    tasks:[
+     task('El constructor de Juego recibe el robot y la meta',ws=>!!classNamed(ws,'Juego')?.methods.some(m=>m.name==='Juego'&&m.params.length===2&&m.params[0].type==='Robot'&&m.params[1].type==='int')),
+     task('Juego guarda la meta en un atributo private int',ws=>!!classNamed(ws,'Juego')?.fields.some(f=>f.type==='int'&&f.mods.includes('private'))),
+     task('revisar() recarga en la estación (0, 4)',(ws,run)=>!!run?.compiled&&!run.error,{needsRun:true,explain:(ws,run)=>failure(run)}),
+     task('termino() devuelve true solo al alcanzar la meta',(ws,run)=>!!run?.compiled&&!run.error&&outputOf(run).join()==='false,true',{needsRun:true,
+      explain:(ws,run)=>failure(run)??(outputOf(run)[0]!=='false'?'termino() dijo true con un solo punto: compara los puntos del marcador con la meta.':`Con 2 puntos y meta 2, termino() devolvió ${outputOf(run)[1]}. Devuelve marcador.getPuntos() >= meta.`)})
+    ],
+    solution:withRules('Cosecha de cristales',MARCADOR,JUEGO_META)},
+   {intro:'¡La partida! Usa tu control para recoger los cuatro cristales. Miaubit empieza con 8 de energía: planea cuándo pasar por la estación.',
+    game:[MANDO],stage:true,look:'cristales',hud:true,pad:true,play:true,goal:'fin',
+    initial:{chargers:[[0,4]],boxes:[[2,0,1],[5,1,1],[3,4,1],[5,4,1]],walls:[[2,2],[3,2]],robot:{energy:8}},
+    setup:'Control control = new Control();\nMando mando = control;\nJuego juego = new Juego(robot, 4);',tick:'juego.revisar();',after:'boolean fin = juego.termino();',
+    hints:['Con 8 de energía no alcanzas todos los cristales: ve primero a la estación (0, 4) para recargar.','Una ruta posible: dos veces abajo, cinco a la derecha, cuatro arriba y tres a la izquierda.'],
+    tasks:[
+     task('Recoge los cuatro cristales jugando con tu control',(ws,run)=>!!run?.presses&&!run.error&&crystalsLeft(run)===0,{needsRun:true,explain:()=>'Juega con las flechas: pasa por la estación (0, 4) antes de quedarte sin energía y recoge los cuatro cristales.'}),
+     task('termino() anuncia el final de la cosecha',(ws,run)=>!!run?.presses&&!run.error&&run.result.final.vars.fin?.text==='true',{needsRun:true,
+      explain:(ws,run)=>run?.presses&&crystalsLeft(run)===0?'Recogiste todo, pero termino() devolvió false: compara los puntos con la meta.':null})
+    ],
+    solution:withRules('Cosecha de cristales',MARCADOR,JUEGO_META),
+    route:['abajo','abajo','derecha','derecha','derecha','derecha','derecha','arriba','arriba','arriba','arriba','izquierda','izquierda','izquierda']}
   ]
  };
+ // A project can start with files from the previous one: the harvest reuses the player's own control.
+ function startWorkspace(projectId,saved){
+  if(projectId!=='cosecha')return W.empty();
+  const source=saved?.projects?.control?.workspace,fallback={'Boton.java':BOTON_PULSAR,'Control.java':CONTROL_FINAL},files={};
+  for(const name of ['Boton.java','Control.java']){const own=source&&Object.keys(source.files).find(p=>W.basename(p)===name);files['control/'+name]=own?source.files[own]:fallback[name];}
+  return {name:'',folders:['control'],files};
+ }
+ function declared(ws,path,name){return !!classIn(ws,path,name)&&!W.analyze(path,ws.files[path]).problems.some(p=>p.severity==='error');}
+ function withRules(name,marcador,juego){const start=startWorkspace('cosecha',null);return {name,folders:['control','reglas'],files:{...start.files,[MARC]:marcador,[JUEGO]:juego}};}
+ function outputOf(run){return run?.compiled&&run.result?.final?run.result.final.output:[];}
+ function crystalsLeft(run){return (run?.result?.final?.world.boxes??[]).reduce((sum,box)=>sum+box[2],0);}
+ // Errors of the harvest rules, explained with the missions that taught the fix.
+ function failure(run){
+  const message=run?.compiled?run.error?.message:null;if(!message)return null;
+  if(/caja para recoger/.test(message))return 'revisar() intentó recoger donde no hay cristal: comprueba robot.hayCaja() antes de recoger, como en la misión 22.';
+  if(/sin energía/.test(message))return 'Miaubit se quedó sin energía: en revisar(), recarga cuando esté en la estación (0, 4), como en la misión 28.';
+  if(/estación/.test(message))return 'recargar() solo funciona en la estación: compara robot.getX() y robot.getY() con (0, 4) usando &&, como en la misión 24.';
+  const code=run.error.code?.replace(/;$/,'');
+  if(run.error.harness&&/\bnew \w+\(/.test(code)&&/constructor|espera \d+ parámetros/.test(message))return `El juego ejecutó ${code}: escribe un constructor que reciba esos parámetros.`;
+  return run.error.harness?`Al probar, el juego ejecutó ${code} y ocurrió esto: ${message}`:`${run.error.path}, línea ${run.error.line}: ${message}`;
+ }
+ // The scoreboard is read from the player's objects: the Marcador inside juego, its meta and Miaubit's energy.
+ function hudOf(level,run){
+  const final=run?.compiled?run.result?.final:null;if(!final)return null;
+  const byId=new Map(final.objects.map(o=>[o.id,o])),juego=byId.get(final.vars.juego?.objectId),robot=final.objects.find(o=>o.robot?.name==='Miaubit')?.robot;
+  const marcador=Object.values(juego?.fields??{}).map(f=>byId.get(f.objectId)).find(o=>o?.cls==='Marcador');
+  const number=(object,name)=>{const field=object?.fields[name]??Object.values(object?.fields??{}).find(f=>f.type==='int');return field&&field.text!=='null'?Number(field.text):null;};
+  return {puntos:number(marcador,'puntos'),meta:juego?.fields.meta?Number(juego.fields.meta.text):null,energia:robot?.energy??null,cristales:crystalsLeft(run),total:(level.initial?.boxes??[]).reduce((sum,box)=>sum+box[2],0)};
+ }
+ const won=(level,run)=>!!run&&!run.error&&(level.goal==='fin'?run.result.final.vars.fin?.text==='true':reached(run,level));
  // What Probar runs after the player's files: the probes, or only the setup in levels without them.
  const harnessFor=level=>level.harness??level.setup??'';
  // The harness of a play session: the level's setup, then one presionar call per arrow pressed.
- function playHarness(level,presses){return [level.setup,...presses.filter(p=>p in PAD).map(p=>`mando.presionar("${p}", robot);`)].join('\n');}
+ function playHarness(level,presses){return [level.setup,...presses.filter(p=>p in PAD).flatMap(p=>[`mando.presionar("${p}", robot);`,level.tick]),level.after].filter(Boolean).join('\n');}
  function reached(run,level){const robot=run.result.final?.objects.find(o=>o.robot?.name==='Miaubit')?.robot;return !!robot&&(level.initial?.targets??[]).some(([x,y])=>robot.x===x&&robot.y===y);}
  // The player's counter must match three presses made by the game.
  function counted(level,ws){
@@ -159,5 +254,5 @@
   return {version:1,projects:saved};
  }
  const finished=saved=>new Set(projects.filter(p=>saved.projects[p.id]?.done.length===p.levels.length).map(p=>p.id));
- globalThis.MiaubitLevels={get,count,evaluate,probe,harnessFor,playHarness,padLayout,reached,PAD,COLORS,restore,finished};
+ globalThis.MiaubitLevels={get,count,evaluate,probe,harnessFor,playHarness,padLayout,reached,won,hudOf,startWorkspace,PAD,COLORS,restore,finished};
 })();

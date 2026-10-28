@@ -7,6 +7,7 @@
  const projects=[
   {id:'control',number:1,title:'El control de Miaubit',focus:'Fundamentos de un proyecto',
    summary:'Construye desde cero un control virtual y mueve a Miaubit con tus propios botones.',
+   built:'Lo construiste con clases, objetos, una interfaz y un contador privado.',
    levels:[
     level('Crea el proyecto','Nombra el proyecto, crea la carpeta src y el archivo Boton.java.',['m51']),
     level('El plano del botón','Clase Boton con dirección, color y un constructor que usa this.',['m51','m52','m53','m26']),
@@ -16,15 +17,17 @@
    ]},
   {id:'cosecha',number:2,title:'La cosecha de cristales',focus:'Infraestructura y reglas',
    summary:'Convierte tu control en un juego: recoge cristales y gana antes de quedarte sin energía.',
+   built:'Tu control ahora es un juego: un marcador protegido, reglas que componen objetos y una meta que se cumple jugando.',
    levels:[
-    level('Infraestructura','Crea las carpetas juego y control y los archivos Marcador.java y Juego.java.',['m50','m90']),
+    level('Infraestructura','Tu control llega a la carpeta control; crea la carpeta reglas con Marcador.java y Juego.java.',['m50','m90']),
     level('Marcador protegido','Puntos privados, sumar(int n) con validación y getPuntos().',['m61','m62','m68']),
     level('Reglas del juego','Juego contiene el robot y el marcador; revisar() recoge y suma puntos.',['m22','m24','m90']),
-    level('Energía y meta','Recarga en la estación y termino() indica si alcanzaste la meta.',['m28','m49','m88']),
-    level('Partida','El marcador de puntos y energía se dibuja leyendo tus objetos.',['m81','m82'])
+    level('Energía y meta','revisar() recarga en la estación (0, 4) y termino() indica si alcanzaste la meta.',['m28','m49','m88']),
+    level('Partida','Juega con tu control: recoge los cuatro cristales sin quedarte sin energía; el marcador lee tus objetos.',['m81','m82'])
    ]},
   {id:'piloto',number:3,title:'Piloto automático',focus:'Arquitectura y polimorfismo',
    summary:'Diseña pilotos intercambiables: Luna patrulla sola mientras Miaubit obedece tu control.',
+   built:'Diseñaste una arquitectura donde cada robot elige su piloto gracias al polimorfismo.',
    levels:[
     level('Arquitectura','Decide clases, contrato y composición en un diagrama antes de programar.',['m70','m90']),
     level('El contrato','La interfaz Piloto define paso(Robot r).',['m65','m66']),
