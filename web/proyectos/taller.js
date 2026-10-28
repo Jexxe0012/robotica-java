@@ -5,6 +5,8 @@
  const KEY='miaubit-proyectos-v1',LINE=22,reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  let saved=load(),project=null,entry=null,level=null,levelIndex=0,run=null,openFiles=[],current=null,folder='',creating=null;
  let hintIndex=0,doneTasks=new Set(),pendingDelete=null,resetArmed=false,escapeArmed=false,saveTimer,checkTimer,resetTimer;
+ let runId=0,replay=null;
+ const TOWARD={este:'al este',oeste:'al oeste',norte:'al norte',sur:'al sur'},at=([x,y])=>`(${x}, ${y})`;
  const pad=n=>String(n).padStart(2,'0'),node=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=text;return n;};
  const files=()=>Object.keys(entry.workspace.files).sort();
  function load(){try{return L.restore(JSON.parse(localStorage.getItem(KEY)??'null'));}catch{return L.restore(null);}}
@@ -20,7 +22,34 @@
   levelIndex=index;level=L.get(project.id,index);run=null;hintIndex=0;pendingDelete=null;
   $('run-status').textContent='';delete $('run-status').dataset.tone;
   doneTasks=new Set(L.evaluate(level,entry.workspace).tasks.filter(t=>t.done).map(t=>t.text));
-  $('hint').textContent='Pedir una pista';say(level.intro);
+  $('hint').textContent='Pedir una pista';say(level.intro);prepareStage();
+ }
+ // The stage shows the level's board and, after Probar, Miaubit acting out the run.
+ function prepareStage(){
+  $('stage').hidden=!level.stage;replay=null;$('stage-replay').disabled=true;
+  if(!level.stage)return;
+  renderProbes(null);fitStage();
+  const frame=W.frames({initial:RobotJava.execute('',level.initial??{}).initial,trace:[]})[0],loading=$('stage-loading');
+  loading.hidden=false;loading.textContent='Preparando el escenario…';
+  MiaubitStage.mount($('stage-canvas')).then(()=>{MiaubitStage.show(frame);loading.hidden=true;describe(frame);}).catch(()=>{loading.textContent='No se pudo cargar el escenario. Revisa tu conexión y recarga la página.';});
+ }
+ function fitStage(){MiaubitStage.setZoom($('stage').clientWidth>=MiaubitStage.size.width*2+300?2:1);}
+ function describe(frame){const robot=frame?.robots[0];$('stage-canvas').setAttribute('aria-label',robot?`Escenario de pruebas: ${robot.name} en ${at([robot.x,robot.y])}.`:'Escenario de pruebas.');}
+ function renderProbes(results){
+  $('probes').replaceChildren(...(level.probes??[]).map((p,i)=>{
+   const result=results?.[i],state=result?.state??'pending',item=node('li');item.dataset.state=state;
+   const detail=state==='pending'?`Debe mover a Miaubit una casilla ${TOWARD[p.dir]}.`:state==='ok'?`Movió a Miaubit de ${at(result.from)} a ${at(result.to)}.`
+    :state==='wrong'?`Movió a Miaubit de ${at(result.from)} a ${at(result.to)}; debía ir una casilla ${TOWARD[p.dir]}.`:state==='error'?`Se detuvo: ${result.message}`:'No se llegó a probar.';
+   item.append(node('span','probe-mark',{ok:'✓',wrong:'✗',error:'✗',skipped:'·'}[state]??String(i+1)),node('code','',`${p.label}.pulsar(robot)`),node('span','probe-detail',detail));
+   return item;
+  }));
+ }
+ async function playStage(results){
+  const success=results.every(p=>p.state==='ok')&&!run.error;
+  replay={frames:W.frames(run.result),bump:W.blocked(run,entry.workspace),success};
+  renderProbes(null);$('run').disabled=true;$('stage-replay').disabled=true;
+  await MiaubitStage.play(replay.frames,{bump:replay.bump,success});
+  $('run').disabled=false;$('stage-replay').disabled=false;renderProbes(results);describe(replay.frames.at(-1));
  }
  function open(projectId){
   const found=projects.find(p=>p.id===projectId);if(!found||!L.count(projectId))return false;
@@ -32,10 +61,10 @@
   openFiles=files().slice(0,1);current=openFiles[0]??null;folder=current?W.dirname(current):'';creating=null;
   setLevel(entry.level);
   $('project-name').value=entry.workspace.name;$('project-name-error').textContent='';$('create-form').hidden=true;$('level-done').hidden=true;$('taller-grid').inert=false;
-  $('taller').hidden=false;renderAll();showOutput('problems');$('taller-title').focus();
+  $('taller').hidden=false;if(level.stage)fitStage();renderAll();showOutput('problems');$('taller-title').focus();
   return true;
  }
- function close(){if(!project)return;persist(true);$('taller').hidden=true;$('level-done').hidden=true;project=null;document.title='Modo Proyecto · Las aventuras de Miaubit';}
+ function close(){if(!project)return;persist(true);runId++;MiaubitStage.sleep();$('run').disabled=false;$('taller').hidden=true;$('level-done').hidden=true;project=null;document.title='Modo Proyecto · Las aventuras de Miaubit';}
  function renderAll(){renderHeader();renderTree();renderTabs();renderEditor();renderProblems();renderOutput();renderTasks();}
  function renderHeader(){
   const info=project.levels[levelIndex];
@@ -180,7 +209,8 @@
   if(state.complete&&!entry.done.includes(levelIndex)){entry.done.push(levelIndex);entry.done.sort((a,b)=>a-b);persist(true);renderHeader();celebrate();}
   return state;
  }
- function runCode(){
+ async function runCode(){
+  const id=++runId;
   run=W.run(entry.workspace,{game:level.game??[],harness:level.harness??'',initial:level.initial??{}});
   const status=$('run-status');
   if(!run.compiled){
@@ -195,15 +225,18 @@
   }
   if(!reduced()){const bar=document.querySelector('.run-bar');bar.dataset.flash=run.compiled&&!run.error?'ok':'error';setTimeout(()=>delete bar.dataset.flash,600);}
   renderTree();renderProblems();renderOutput();if(current)paint();
+  // Objectives are revealed after Miaubit finishes acting out the run, so the celebration never hides it.
+  if(level.stage&&run.compiled){await playStage(L.probe(level,entry.workspace));if(id!==runId||!project)return;}
   const state=renderTasks(true),pending=state.tasks.find(t=>!t.done&&t.explain)??state.tasks.find(t=>!t.done);
-  if(run.compiled&&!run.error&&pending)say(pending.explain??`Tu programa funciona, pero falta esto: ${pending.text}.`,'hint');
+  if(run?.compiled&&!run.error&&pending)say(pending.explain??`Tu programa funciona, pero falta esto: ${pending.text}.`,'hint');
  }
  function showOutput(name){for(const tab of ['problems','console','objects']){$('tab-'+tab).setAttribute('aria-selected',String(tab===name));$('out-'+tab).hidden=tab!==name;}}
  function celebrate(){
   const next=L.get(project.id,levelIndex+1),total=project.levels.length,dialog=$('level-done');
   $('level-done-kicker').textContent=`PROYECTO ${pad(project.number)} · NIVEL ${levelIndex+1} DE ${total}`;
   $('level-done-title').textContent='¡Nivel completado!';
-  $('level-done-text').textContent=next?`Tu código pasa al siguiente nivel: ${project.levels[levelIndex+1].title}.`:levelIndex+1<total?`Completaste los niveles disponibles. Los niveles ${levelIndex+2} a ${total} llegan con el escenario de Miaubit en una próxima actualización; tu proyecto queda guardado en este navegador.`:'¡Terminaste el proyecto!';
+  const rest=total-levelIndex-1,coming=rest===1?`El nivel ${total} llega`:rest===2?`Los niveles ${total-1} y ${total} llegan`:`Los niveles ${levelIndex+2} a ${total} llegan`;
+  $('level-done-text').textContent=next?`Tu código pasa al siguiente nivel: ${project.levels[levelIndex+1].title}.`:rest>0?`Completaste los niveles disponibles. ${coming} en una próxima actualización; tu proyecto queda guardado en este navegador.`:'¡Terminaste el proyecto!';
   $('level-next').textContent=next?'Siguiente nivel ▶':'Volver a los proyectos';
   const confetti=dialog.querySelector('.confetti');confetti.replaceChildren();
   if(!reduced())for(let i=0;i<28;i++){const bit=node('i');bit.style.left=`${(i*37)%100}%`;bit.style.background=['#ffd95a','#b3a9d8','#6dbb91','#d59b48'][i%4];bit.style.animationDelay=`${(i%7)*60}ms`;confetti.append(bit);}
@@ -230,6 +263,8 @@
  });
  $('hint').addEventListener('click',()=>{const hints=level.hints??[];if(!hints.length)return;say(hints[hintIndex%hints.length],'hint');hintIndex++;$('hint').textContent='Otra pista';});
  $('run').addEventListener('click',runCode);
+ $('stage-replay').addEventListener('click',async()=>{if(!replay)return;$('stage-replay').disabled=true;await MiaubitStage.play(replay.frames,{bump:replay.bump,success:replay.success});$('stage-replay').disabled=false;});
+ addEventListener('resize',()=>{if(project&&level?.stage)fitStage();});
  for(const tab of ['problems','console','objects'])$('tab-'+tab).addEventListener('click',()=>showOutput(tab));
  const code=$('code');
  code.addEventListener('input',onEdit);

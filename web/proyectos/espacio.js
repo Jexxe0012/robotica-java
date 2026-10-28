@@ -99,6 +99,21 @@
   if(error?.harness)error.code=harness.split('\n')[error.line-1]?.trim()??'';
   return {compiled:true,problems,result,error};
  }
+ // Visual states of a run for the stage: the initial board, then every change of robots or board.
+ function frames(result){
+  if(!result?.initial)return [];
+  const pick=state=>({world:state.world,robots:state.objects.filter(o=>o.robot).map(o=>({id:o.id,name:o.robot.name,x:o.robot.x,y:o.robot.y,dir:o.robot.dir,cargo:o.robot.cargo}))});
+  const list=[];let last='';
+  for(const state of [result.initial,...result.trace]){const frame=pick(state),key=JSON.stringify(frame);if(key!==last){list.push(frame);last=key;}}
+  return list;
+ }
+ // When a run stops because a robot hit the edge or a rock, the direction it tried (0 east, 1 south, 2 west, 3 north).
+ function blocked(run,ws){
+  const error=run?.error;if(!error||!/salir del mapa|atravesar un obstáculo/.test(error.message))return null;
+  const text=error.harness?'':(ws.files[error.path]??'').split('\n')[error.line-1]??'',move=/\.\s*(este|sur|oeste|norte|avanzar)\s*\(/.exec(strip(text))?.[1];
+  if(move==='avanzar')return run.result.final?.objects.find(o=>o.robot)?.robot.dir??null;
+  return move?{este:0,sur:1,oeste:2,norte:3}[move]:null;
+ }
  // Saved workspaces come from the browser; anything unexpected is dropped instead of trusted.
  function restore(raw){
   if(!raw||typeof raw!=='object'||typeof raw.name!=='string'||!Array.isArray(raw.folders)||!raw.files||typeof raw.files!=='object')return null;
@@ -119,5 +134,5 @@
    return KEYWORDS.has(word)?span('k',word):TYPES.has(word)||/^[A-Z]/.test(word)?span('t',word):word;
   });
  }
- globalThis.MiaubitWorkshop={empty,clone,basename,dirname,join,strip,projectNameError,folderNameError,fileNameError,addFolder,addFile,remove,analyze,problemsOf,combine,locate,run,restore,highlight};
+ globalThis.MiaubitWorkshop={empty,clone,basename,dirname,join,strip,projectNameError,folderNameError,fileNameError,addFolder,addFile,remove,analyze,problemsOf,combine,locate,run,frames,blocked,restore,highlight};
 })();
