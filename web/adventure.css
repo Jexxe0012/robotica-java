@@ -26,3 +26,5 @@
 .scene-observation{padding:9px 14px;border-top:1px solid var(--line);color:var(--mint);font:.8rem var(--mono);overflow-wrap:anywhere;line-height:1.5;min-height:38px}
 .story-bottom .button{white-space:normal;text-align:left;max-width:100%}
 .world-panel{scroll-margin-top:12px}
+/* The complete 12 × 9 map has a 4:3 ratio. Match its frame to avoid blank bars. */
+.world[data-camera="overview"]{height:auto;aspect-ratio:4/3}
