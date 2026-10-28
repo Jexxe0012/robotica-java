@@ -32,6 +32,11 @@
   });
   $('gate-regions').replaceChildren(...items);
  }
+ function playableText(){
+  const ready=projects.filter(p=>MiaubitLevels.count(p.id)===p.levels.length).length,rest=projects.length-ready;
+  const done=ready===1?'El Proyecto 1 ya se puede jugar completo':`Los proyectos 1 ${ready===2?'y':'a'} ${ready} ya se pueden jugar completos`;
+  return rest?`${done}; ${rest===1?'el último llega en la próxima actualización':'los demás llegan en las próximas actualizaciones'}.`:`${done}.`;
+ }
  function renderGate(state){
   const gate=$('gate'),dev=$('gate-dev'),next=$('gate-continue');
   gate.setAttribute('aria-busy',String(!state&&!failed));
@@ -48,7 +53,7 @@
    gate.dataset.state='open';
    $('gate-label').textContent=state.dev?'MODO DESARROLLO · SOLO EN ESTE EQUIPO':'TALLER ABIERTO';
    $('gate-title').textContent=state.dev?'Taller abierto para desarrollar':'¡Completaste la expedición!';
-   $('gate-text').textContent=(state.dev?`El taller se abrió sin las 90 misiones; llevas ${state.done}. `:'Las 90 misiones te dieron todas las piezas. ')+'El Proyecto 1 ya se puede jugar completo; los otros dos llegan en las próximas actualizaciones.';
+   $('gate-text').textContent=(state.dev?`El taller se abrió sin las 90 misiones; llevas ${state.done}. `:'Las 90 misiones te dieron todas las piezas. ')+playableText();
   }else{
    gate.dataset.state='locked';$('gate-label').textContent='TALLER CERRADO';
    $('gate-title').textContent='Completa las 90 misiones para abrir el taller';

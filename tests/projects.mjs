@@ -101,7 +101,7 @@ assert.equal(W.highlight('a < b && c > d').replace(/<span[^>]*>|<\/span>/g,''),'
 
 // Playable levels: each starts unfinished from the previous level's files, and its solution completes it without warnings.
 for(const project of projects){
- let previous=W.empty();
+ let previous=Levels.startWorkspace(project.id,null);
  for(let i=0;i<Levels.count(project.id);i++){
   const level=Levels.get(project.id,i),run=ws=>W.run(ws,{game:level.game??[],harness:Levels.harnessFor(level),initial:level.initial??{}});
   // Play levels are won with the control: their solution is checked after pressing the reference route.
@@ -114,7 +114,7 @@ for(const project of projects){
   previous=level.solution;
  }
 }
-assert.equal(Levels.count('control'),5);assert.equal(Levels.get('control',5),null);assert.equal(Levels.count('cosecha'),0);
+assert.equal(Levels.count('control'),5);assert.equal(Levels.get('control',5),null);assert.equal(Levels.count('cosecha'),5);assert.equal(Levels.get('cosecha',5),null);assert.equal(Levels.count('piloto'),0);
 const noThis={...l2.solution,files:{'src/Boton.java':boton.replace(/this\./g,'')}},missing=Levels.evaluate(l2,noThis,W.run(noThis,{harness:l2.harness}));
 assert.equal(missing.complete,false);assert.match(missing.tasks.find(t=>t.explain).explain,/misión 53/);
 
@@ -174,6 +174,35 @@ assert(explain5(withControl(l5,control5.replace('"azul"','"violeta"').replace('"
 assert.equal(Levels.harnessFor(l5),l5.setup);assert.equal(Levels.harnessFor(l4),l4.harness);assert.equal(Levels.harnessFor(l1),'');
 const notPlayed=Levels.evaluate(l5,l5.solution,W.run(l5.solution,{game:l5.game,harness:Levels.harnessFor(l5),initial:l5.initial}));
 assert.deepEqual(notPlayed.tasks.map(t=>t.done),[true,true,true,false]);assert.match(notPlayed.tasks[3].explain,/estrella/);
+
+// Project 2 starts with the player's own control from project 1, placed in the control folder.
+const own={projects:{control:{workspace:{name:'x',folders:['src'],files:{'src/Boton.java':'class Boton {\n  // mío\n}\n','src/Control.java':'class Control implements Mando {\n  // mío\n}\n'}},level:4,done:[0,1,2,3,4]}}};
+const harvestStart=Levels.startWorkspace('cosecha',own);
+assert.deepEqual(harvestStart.folders,['control']);assert.match(harvestStart.files['control/Boton.java'],/mío/);assert.match(harvestStart.files['control/Control.java'],/mío/);
+assert.deepEqual(Object.keys(Levels.startWorkspace('cosecha',null).files),['control/Boton.java','control/Control.java']);assert.deepEqual(Levels.startWorkspace('control',own),W.empty());
+
+// The harvest rules explain each mistake with the mission that teaches the fix.
+const [c1,c2,c3,c4,c5]=[0,1,2,3,4].map(i=>Levels.get('cosecha',i));
+const withFile=(level,path,text)=>({...level.solution,files:{...level.solution.files,[path]:text}});
+const explainOf=(level,ws)=>Levels.evaluate(level,ws,W.run(ws,{game:level.game,harness:Levels.harnessFor(level),initial:level.initial??{}})).tasks.find(t=>t.explain)?.explain;
+assert.equal(c1.tasks.length,4);assert.match(explainOf(c2,withFile(c2,'reglas/Marcador.java',c2.solution.files['reglas/Marcador.java'].replace('if (n > 0) { puntos += n; }','puntos += n;'))),/-2.*misión 68/);
+const rules3=c3.solution.files['reglas/Juego.java'];
+assert.match(explainOf(c3,withFile(c3,'reglas/Juego.java',rules3.replace('    if (robot.hayCaja()) {\n      robot.recoger();\n      marcador.sumar(1);\n    }','    robot.recoger();\n    marcador.sumar(1);'))),/hayCaja.*misión 22/);
+assert.match(explainOf(c3,withFile(c3,'reglas/Juego.java',rules3.replace('      marcador.sumar(1);\n',''))),/devolvió 0/);
+const rules4=c4.solution.files['reglas/Juego.java'];
+assert.match(explainOf(c4,withFile(c4,'reglas/Juego.java',rules4.replace('    if (robot.getX() == 0 && robot.getY() == 4) {\n      robot.recargar();\n    }\n',''))),/sin energía.*misión 28/);
+assert.match(explainOf(c4,withFile(c4,'reglas/Juego.java',rules4.replace('robot.getX() == 0 && robot.getY() == 4','robot.getEnergia() < 3'))),/estación.*misión 24/);
+assert.match(explainOf(c4,c3.solution),/new Juego\(robot, 2\).*constructor/);
+assert.match(explainOf(c4,withFile(c4,'reglas/Juego.java',rules4.replace('>= meta','> meta'))),/devolvió false/);
+
+// The harvest is played with the control: every turn moves and then checks the rules; the scoreboard reads the player's objects.
+assert.equal(Levels.playHarness(c5,['arriba']),c5.setup+'\nmando.presionar("arriba", robot);\njuego.revisar();\nboolean fin = juego.termino();');
+const harvest=presses=>Object.assign(W.run(c5.solution,{game:c5.game,harness:Levels.playHarness(c5,presses),initial:c5.initial}),{presses:presses.length});
+const fullHarvest=harvest(c5.route);
+assert.deepEqual(Levels.hudOf(c5,fullHarvest),{puntos:4,meta:4,energia:8,cristales:0,total:4});assert(Levels.won(c5,fullHarvest));
+assert.deepEqual(Levels.hudOf(c5,harvest([])),{puntos:0,meta:4,energia:8,cristales:4,total:4});assert(!Levels.won(c5,harvest([])));assert.equal(Levels.hudOf(c5,null),null);
+assert.match(harvest(['arriba','arriba','derecha','derecha','derecha','derecha','derecha','abajo','abajo']).error.message,/energía/);
+assert(fullHarvest.result.trace.length<1200);
 
 // The project mode walk sheet is exactly what the versioned generator draws: 192 × 192, four rows of four 48 px frames.
 const walk=await readFile('web/proyectos/assets/miaubit-camina.png');

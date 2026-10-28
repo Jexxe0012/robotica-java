@@ -6,7 +6,7 @@
  // Interpreter directions are 0 east, 1 south, 2 west, 3 north; the sheet rows are south, north, east and west.
  const ROW=[2,0,3,1],idle=dir=>ROW[dir]*4,DIR={'1,0':0,'0,1':1,'-1,0':2,'0,-1':3},SHIFT=[[1,0],[0,1],[-1,0],[0,-1]];
  const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches,center=(x,y)=>({x:PAD+(x+.5)*CELL,y:PAD+(y+.5)*CELL});
- let game=null,scene=null,loading=null,latest=null,token=0,zoom=1;
+ let game=null,scene=null,loading=null,latest=null,token=0,zoom=1,look='cajas';
  function loadPhaser(){
   if(globalThis.Phaser)return Promise.resolve();
   return loading??=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=SiteAssets.url('phaser.js');script.onload=resolve;script.onerror=()=>{loading=null;reject(new Error('phaser'));};document.head.append(script);});
@@ -30,7 +30,10 @@
   const live=new Set();
   for(const [x,y,count] of world.boxes){
    if(!count)continue;const p=center(x,y),key=x+','+y;live.add(key);
-   g.fillStyle(0x714c2d).fillRect(p.x-13,p.y-13,26,26).lineStyle(2,0xdcb56c).strokeRect(p.x-13,p.y-13,26,26).lineBetween(p.x-11,p.y-11,p.x+11,p.y+11);
+   // The harvest draws its boxes as crystals; the interpreter still treats them as boxes.
+   if(look==='cristales'){g.fillStyle(0x8fd3f0,.18).fillCircle(p.x,p.y+2,17);g.fillStyle(0x5fa8d8).fillTriangle(p.x-11,p.y,p.x,p.y-16,p.x+11,p.y).fillTriangle(p.x-11,p.y,p.x,p.y+14,p.x+11,p.y);g.fillStyle(0xd9f3ff).fillTriangle(p.x-5,p.y-2,p.x,p.y-12,p.x+2,p.y-2);g.fillStyle(0x3d6fa8).fillTriangle(p.x,p.y+14,p.x+11,p.y,p.x+3,p.y+2);}
+   else g.fillStyle(0x714c2d).fillRect(p.x-13,p.y-13,26,26).lineStyle(2,0xdcb56c).strokeRect(p.x-13,p.y-13,26,26).lineBetween(p.x-11,p.y-11,p.x+11,p.y+11);
+   if(count<2){scene.boxLabels.get(key)?.destroy();scene.boxLabels.delete(key);continue;}
    let label=scene.boxLabels.get(key);if(!label){label=scene.add.text(p.x+10,p.y-22,'',{fontFamily:'monospace',fontSize:'10px',color:'#ffe5a3',backgroundColor:'#241b12',padding:{x:2,y:1}}).setDepth(8);scene.boxLabels.set(key,label);}label.setText(String(count));
   }
   for(const [key,label] of scene.boxLabels)if(!live.has(key)){label.destroy();scene.boxLabels.delete(key);}
@@ -118,6 +121,7 @@
    if(mine===token)snap(frames.at(-1));
   },
   setZoom(value){zoom=value;game?.scale.setZoom(value);},
+  setLook(value){look=value==='cristales'?'cristales':'cajas';},
   sleep(){token++;game?.loop.sleep();},
   wake(){game?.loop.wake();}
  };

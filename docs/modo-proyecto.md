@@ -99,13 +99,15 @@ Construir desde cero un control virtual con el que el jugador mueve a Miaubit.
 
 Convertir el control en un juego con reglas: recoger cristales y ganar antes de quedarse sin energía.
 
+El proyecto empieza con el control **propio** del jugador: `Boton.java` y `Control.java` se copian de su Proyecto 1 a la carpeta `control` (si no existen, se usan las soluciones de referencia). En cada turno de juego, el control mueve a Miaubit y después el juego llama a `juego.revisar()`; las cajas del intérprete se dibujan como cristales. Desde el nivel 3, un marcador muestra los puntos, la meta, la energía y los cristales restantes leyendo los objetos del jugador: el `Marcador` dentro de `juego`, su atributo `meta` y la energía de Miaubit. El intérprete no ofrece una consulta de estación, así que la recarga compara la posición con la estación (0, 4).
+
 | Nivel | Actividad | Misiones |
 | --- | --- | --- |
-| 1 · Infraestructura | Crear las carpetas `juego` y `control` y los archivos `Marcador.java` y `Juego.java`; el control del Proyecto 1 llega terminado | m50, m90 |
+| 1 · Infraestructura | El control del Proyecto 1 llega terminado a la carpeta `control`; crear la carpeta `reglas` con `Marcador.java` y `Juego.java` | m50, m90 |
 | 2 · Marcador protegido | `private int puntos`, `sumar(int n)` que rechaza valores no positivos y `getPuntos()` | m61, m62, m68 |
 | 3 · Reglas del juego | `Juego` contiene el robot y el marcador; `revisar()` recoge con `hayCaja()` y suma puntos | m22, m24, m90 |
-| 4 · Energía y meta | Un botón de acción recarga en la estación; `termino()` devuelve si se alcanzó la meta | m28, m49, m88 |
-| 5 · Partida | El marcador de puntos y energía se dibuja leyendo los objetos del jugador | m81, m82 |
+| 4 · Energía y meta | `Juego(Robot robot, int meta)`; `revisar()` recarga cuando `robot.getX()` y `robot.getY()` coinciden con la estación (0, 4); `termino()` devuelve si se alcanzó la meta | m28, m49, m88 |
+| 5 · Partida | Jugar con el control propio: recoger los cuatro cristales sin quedarse sin energía, con un marcador que lee los objetos del jugador | m81, m82 |
 
 ### Proyecto 3 · Piloto automático
 
@@ -148,7 +150,7 @@ Cada etapa termina en un pull request de `diego` hacia `main`, con todas las pru
 | 2 · Taller | Explorador, editor, unión de archivos, errores por archivo y línea, avance en el navegador y los niveles 1 y 2 del Proyecto 1, que no necesitan escenario |
 | 3 · Escena y arte | Escena Phaser propia, caminata de Miaubit, generador en `tools/miaubit-arte/` y el nivel 3 del Proyecto 1, el primero con escenario |
 | 4 · Proyecto 1 | Control virtual dibujado desde los objetos del jugador, repetición de pulsaciones y niveles 4 y 5 |
-| 5 · Proyecto 2 | Sus cinco niveles completos |
+| 5 · Proyecto 2 | Sus cinco niveles: carpeta de reglas, marcador protegido, reglas con cristales, energía y meta, y la partida con marcador |
 | 6 · Proyecto 3 | Sus cinco niveles completos |
 
 Quedan para después: el guardado por usuario y una historia que conecte los tres proyectos con la expedición.
@@ -166,7 +168,8 @@ Quedan para después: el guardado por usuario y una historia que conecte los tre
 - La hoja de caminata publicada es idéntica a la que dibuja `tools/miaubit-arte/`, mide 192 × 192 y se empaqueta como `image/png`.
 - `Mando.java` es del juego: queda reservado, se une primero y no forma parte de los archivos del jugador. Las flechas del nivel 4 detectan la interfaz ausente, flechas cruzadas o sin movimiento.
 - El control toma cada flecha del `Boton` con su dirección y avisa de colores desconocidos o faltantes. La repetición de pulsaciones es determinista, 20 pulsaciones caben en la energía y la siguiente se detiene; la ruta de referencia llega a la estrella y una ruta incompleta no.
-- El nivel 5 explica un contador que no suma, la falta de `getPulsaciones()` y un diseño con menos de tres colores, y solo se completa al llegar jugando.
+- El Proyecto 2 empieza con el control propio del jugador, explica un marcador sin validar, recoger sin `hayCaja()`, la falta de recarga, recargar fuera de la estación, el constructor sin meta y un `termino()` incorrecto, y su partida se gana recogiendo los cuatro cristales con el marcador leído de los objetos.
+- El nivel 5 del Proyecto 1 explica un contador que no suma, la falta de `getPulsaciones()` y un diseño con menos de tres colores, y solo se completa al llegar jugando.
 - Cada nivel cita misiones existentes y su código no contiene construcciones excluidas (`else if`, `switch`, `package`, `import`).
 - La repetición de pulsaciones reproduce el mismo estado.
 - Los proyectos, niveles y misiones citadas coinciden con las tablas de este documento.
