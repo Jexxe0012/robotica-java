@@ -37,6 +37,28 @@
  const JUEGO_REGLAS=JUEGO_CAMPOS+'\n  Juego(Robot robot) {\n    this.robot = robot;\n  }\n\n'+JUEGO_RECOGER+'  }\n\n'+JUEGO_PUNTOS+'}\n';
  const JUEGO_META=JUEGO_CAMPOS+'  private int meta;\n\n  Juego(Robot robot, int meta) {\n    this.robot = robot;\n    this.meta = meta;\n  }\n\n'+JUEGO_RECOGER+'    if (robot.getX() == 0 && robot.getY() == 4) {\n      robot.recargar();\n    }\n  }\n\n'+JUEGO_PUNTOS+'\n  public boolean termino() {\n    return marcador.getPuntos() >= meta;\n  }\n}\n';
  const CONTROL_FINAL=CONTROL_BASE.replace('"sur", "violeta"','"sur", "azul"').replace('"oeste", "dorado"','"oeste", "rosa"')+'  private int pulsaciones = 0;\n\n  public void presionar(String boton, Robot r) {\n    pulsaciones++;\n'+PRESIONAR+'\n  public int getPulsaciones() {\n    return pulsaciones;\n  }\n}\n';
+ // The autopilot (project 3): a class plan first, then the Piloto contract, two pilots and a fleet.
+ const PILOTO='interface Piloto {\n  void paso(Robot r);\n}\n';
+ const PATRULLA='class Patrulla implements Piloto {\n  public void paso(Robot r) {\n    if (r.puedeAvanzar()) {\n      r.avanzar();\n    } else {\n      r.girarDerecha();\n    }\n  }\n}\n';
+ const DIRECTO='class Directo implements Piloto {\n  public void paso(Robot r) {\n    while (r.puedeAvanzar()) {\n      r.avanzar();\n    }\n  }\n}\n';
+ const FLOTA='class Flota {\n  private Robot[] robots;\n  private Piloto[] pilotos;\n\n  Flota(Robot[] robots, Piloto[] pilotos) {\n    this.robots = robots;\n    this.pilotos = pilotos;\n  }\n\n  public void turno() {\n    for (int i = 0; i < robots.length; i++) {\n      pilotos[i].paso(robots[i]);\n    }\n  }\n}\n';
+ const SKELETON={Piloto:'interface Piloto {\n}\n',Patrulla:'class Patrulla implements Piloto {\n}\n',Directo:'class Directo implements Piloto {\n}\n',Flota:'class Flota {\n}\n'};
+ // The diagram: what each class is and how it relates to the others. Robot is the game's own class.
+ const PLAN=Object.freeze({
+  classes:['Piloto','Patrulla','Directo','Flota'],
+  kinds:{interfaz:'Interfaz (contrato)',clase:'Clase'},
+  relations:{ninguna:'Ninguna',implementa:'Implementa Piloto',contiene:'Contiene robots y pilotos'},
+  answer:{Piloto:['interfaz','ninguna'],Patrulla:['clase','implementa'],Directo:['clase','implementa'],Flota:['clase','contiene']},
+  hints:{
+   Piloto:['Piloto solo promete un método, sin decir cómo se cumple: es un contrato, como Tarea en la misión 65.','Un contrato no implementa ni contiene a nadie: las demás clases lo cumplen.'],
+   Patrulla:['Patrulla tiene su propio código para cada paso: es una clase.','Patrulla cumple la promesa de Piloto con su propia forma de avanzar (misión 66).'],
+   Directo:['Directo tiene su propio código para cada paso: es una clase.','Directo también cumple la promesa de Piloto, a su manera (misión 70).'],
+   Flota:['Flota guarda datos y tiene un método turno(): es una clase.','Flota reúne robots y pilotos dentro de ella, como el Servicio de la misión 90 contiene un robot y una ruta.']
+  }
+ });
+ const SOUTH=1,DIR_NAMES=['este','sur','oeste','norte'];
+ const FLEET='Robot[] robots = new Robot[]{robot, ayudante};\nPiloto[] pilotos = new Piloto[]{new Directo(), new Patrulla()};\nFlota flota = new Flota(robots, pilotos);';
+ const PATROL='Control control = new Control();\nMando mando = control;\nRobot[] robots = new Robot[]{ayudante};\nPiloto[] pilotos = new Piloto[]{new Patrulla()};\nFlota flota = new Flota(robots, pilotos);';
  const levels={
   control:[
    {intro:'Todo proyecto empieza igual: un nombre, una carpeta para el código y un archivo por cada clase.',
@@ -164,11 +186,112 @@
     ],
     solution:withRules('Cosecha de cristales',MARCADOR,JUEGO_META),
     route:['abajo','abajo','derecha','derecha','derecha','derecha','derecha','arriba','arriba','arriba','arriba','izquierda','izquierda','izquierda']}
+  ],
+  piloto:[
+   {intro:'Antes de programar, un buen proyecto se diseña. Decide en el plano qué es cada pieza y cómo se relacionan; después genera sus archivos.',
+    game:[MANDO],plan:true,
+    hints:['Una interfaz es un contrato: promete métodos sin decir cómo se cumplen. ¿Cuál de las cuatro piezas es solo una promesa?','Patrulla y Directo cumplen el contrato de Piloto; Flota contiene robots y pilotos. Cuando el plano esté listo, pulsa Generar archivos del plano.'],
+    tasks:[
+     task('Ponle nombre al proyecto',ws=>!W.projectNameError(ws.name)),
+     task('En el plano, Piloto es un contrato y las demás piezas son clases',ws=>planCheck(ws).every(c=>c.kindOk)),
+     task('En el plano, Patrulla y Directo implementan Piloto y Flota contiene robots y pilotos',ws=>planCheck(ws).every(c=>c.relationOk)),
+     task('Genera los archivos desde tu plano',ws=>{const piloto=classNamed(ws,'Piloto');return !!piloto?.isInterface&&['Patrulla','Directo'].every(n=>classNamed(ws,n)?.interfaces.includes('Piloto'))&&!!classNamed(ws,'Flota');})
+    ],
+    solution:pilotBase()},
+   {intro:'El contrato dice qué debe saber hacer cualquier piloto: dar un paso con un robot. Escríbelo en la interfaz Piloto.',
+    game:[MANDO],harness:'Piloto patrulla = new Patrulla();\nPiloto directo = new Directo();',
+    hints:['Dentro de interface Piloto escribe la promesa sin cuerpo: void paso(Robot r); igual que Tarea en la misión 65.','Patrulla y Directo deben decir implements Piloto para que el juego pueda guardarlos en variables de tipo Piloto.'],
+    tasks:[
+     task('Piloto promete el método void paso(Robot r)',ws=>!!classNamed(ws,'Piloto')?.methods.some(m=>m.name==='paso'&&m.type==='void'&&m.params.length===1&&m.params[0].type==='Robot'&&!m.body)),
+     task('Patrulla y Directo se pueden usar como Piloto',(ws,run)=>!!run?.compiled&&!run.error,{needsRun:true,explain:(ws,run)=>run?.error?/tipo Piloto/.test(run.error.message)?'Patrulla y Directo deben decir implements Piloto para guardarse en una variable Piloto.':failure(run):null})
+    ],
+    solution:withPilots({Piloto:PILOTO})},
+   tested({intro:'Dos formas de pilotar. Patrulla da un paso si puede y, si no, gira. Directo avanza hasta que algo lo detiene. El juego probará ambas.',
+    game:[MANDO],stage:true,initial:{chargers:[],walls:[[3,2]]},
+    probes:[
+     Object.freeze({label:'Directo',call:'directo.paso(robot)',code:'Piloto directo = new Directo();\ndirecto.paso(robot);',move:[2,0],expect:'Debe avanzar hasta la roca: de (0, 2) a (2, 2).'}),
+     Object.freeze({label:'Patrulla',call:'patrulla.paso(robot)',code:'Piloto patrulla = new Patrulla();\npatrulla.paso(robot);',move:[0,0],face:SOUTH,expect:'La roca está delante: debe girar a la derecha sin moverse.'}),
+     Object.freeze({label:'Patrulla',call:'patrulla.paso(robot)',code:'patrulla.paso(robot);',move:[0,1],face:SOUTH,expect:'Ahora el camino está libre: debe avanzar una casilla al sur.'})
+    ],
+    hints:['En Directo: public void paso(Robot r) { while (r.puedeAvanzar()) { r.avanzar(); } } avanza hasta el obstáculo, como en la misión 38.','En Patrulla: if (r.puedeAvanzar()) { r.avanzar(); } else { r.girarDerecha(); }, como el desvío de la misión 29.'],
+    tasks:[
+     task('Patrulla consulta el sensor puedeAvanzar()',ws=>/puedeAvanzar\s*\(/.test(W.strip(fileOf(ws,'Patrulla')))),
+     task('Directo repite con while mientras pueda avanzar',ws=>/while\s*\(/.test(W.strip(fileOf(ws,'Directo')))),
+     task('Cada piloto mueve a Miaubit a su manera',(ws,run,level)=>!!run?.compiled&&probe(level,ws).every(p=>p.state==='ok'),{needsRun:true,explain:(ws,run,level)=>pilotExplain(probe(level,ws))})
+    ],
+    solution:withPilots({Piloto:PILOTO,Patrulla:PATRULLA,Directo:DIRECTO})}),
+   tested({intro:'Una flota reúne robots y pilotos. En cada turno, cada robot da un paso con su propio piloto: Miaubit con Directo y Luna con Patrulla.',
+    game:[MANDO],stage:true,initial:{chargers:[],walls:[[4,2]],helper:{}},setup:FLEET,
+    probes:[
+     Object.freeze({label:'Turno 1',call:'flota.turno()',code:'flota.turno();',moves:{Miaubit:[3,0],Luna:[1,0]},expect:'Miaubit (Directo) avanza hasta la roca y Luna (Patrulla) da un paso.'}),
+     Object.freeze({label:'Turno 2',call:'flota.turno()',code:'flota.turno();',moves:{Miaubit:[0,0],Luna:[1,0]},expect:'Miaubit ya no puede avanzar; Luna da otro paso.'})
+    ],
+    hints:['En Flota declara private Robot[] robots; y private Piloto[] pilotos; y un constructor Flota(Robot[] robots, Piloto[] pilotos) que los guarde con this.','En public void turno(), recorre la flota: for (int i = 0; i < robots.length; i++) { pilotos[i].paso(robots[i]); } (misiones 77 y 85).'],
+    tasks:[
+     task('Flota guarda los robots y los pilotos en arreglos private',ws=>{const c=classNamed(ws,'Flota');return ['Robot[]','Piloto[]'].every(type=>c?.fields.some(f=>f.type===type&&f.mods.includes('private')));}),
+     task('El constructor de Flota recibe los dos arreglos',ws=>!!classNamed(ws,'Flota')?.methods.some(m=>m.name==='Flota'&&m.params.map(p=>p.type).join()==='Robot[],Piloto[]')),
+     task('turno() da un paso a cada robot con su propio piloto',(ws,run,level)=>!!run?.compiled&&probe(level,ws).every(p=>p.state==='ok'),{needsRun:true,explain:(ws,run,level)=>fleetExplain(probe(level,ws))})
+    ],
+    solution:withPilots({Piloto:PILOTO,Patrulla:PATRULLA,Directo:DIRECTO,Flota:FLOTA})}),
+   {intro:'¡La patrulla final! Luna recorre el tablero sola con su Patrulla y tú llevas a Miaubit a la estrella con tu control, sin chocar con ella.',
+    game:[MANDO],stage:true,pad:true,play:true,
+    initial:{chargers:[],walls:[[2,2],[3,2]],targets:[[5,2]],helper:{x:1,y:0,dir:0}},setup:PATROL,tick:'flota.turno();',
+    harness:PATROL+'\n'+Array(4).fill('flota.turno();').join('\n'),
+    hints:['Luna recorre la fila de arriba y después baja por la columna de la estrella. Si llegas muy rápido, te la encuentras.','Gana tiempo: muévete a un lado y regresa antes de subir. Una ruta posible es derecha, izquierda, derecha, arriba, cuatro veces derecha y abajo.'],
+    tasks:[
+     task('Tu Flota mueve a Luna en cada turno',(ws,run,level)=>!!run?.compiled&&patrolled(level,ws).ok,{needsRun:true,
+      explain:(ws,run,level)=>{const check=patrolled(level,ws);return check.ok?null:failure(check.run)??'Después de 4 turnos, Luna debía llegar a (5, 0). Revisa que turno() dé un paso con pilotos[i] a robots[i].';}}),
+     task('Lleva a Miaubit a la estrella sin chocar con Luna',(ws,run,level)=>!!run?.presses&&!run.error&&reached(run,level)&&!collided(run),{needsRun:true,
+      explain:()=>'Usa las flechas del control. Luna se mueve después de cada flecha: si van a coincidir en la misma casilla, el juego te detiene.'})
+    ],
+    solution:withPilots({Piloto:PILOTO,Patrulla:PATRULLA,Directo:DIRECTO,Flota:FLOTA}),
+    route:['derecha','izquierda','derecha','arriba','derecha','derecha','derecha','derecha','abajo']}
   ]
  };
+ // The plan on the diagram, class by class: right kind, right relation, and a hint when it is not.
+ function planCheck(ws){
+  const plan=ws.plan??{};
+  return PLAN.classes.map(name=>{
+   const kind=plan[name+'Tipo']??'',relation=plan[name+'Relacion']??'',[wantKind,wantRelation]=PLAN.answer[name];
+   const kindOk=kind===wantKind,relationOk=relation===wantRelation;
+   return {name,kind,relation,kindOk,relationOk,hint:!kind?'Elige qué es esta pieza.':!kindOk?PLAN.hints[name][0]:!relation?'Elige cómo se relaciona.':!relationOk?PLAN.hints[name][1]:null};
+  });
+ }
+ // Generating from the plan creates the missing skeleton files in pilotos/, never overwriting the player's files.
+ function generatePlan(ws){
+  if(!planCheck(ws).every(c=>c.kindOk&&c.relationOk))return null;
+  const next=W.clone(ws);if(!next.folders.includes('pilotos')){next.folders.push('pilotos');next.folders.sort();}
+  for(const [name,text] of Object.entries(SKELETON))if(!Object.keys(next.files).some(p=>W.basename(p)===name+'.java'))next.files[`pilotos/${name}.java`]=text;
+  return next;
+ }
+ // Reference workspaces of the autopilot: the finished plan with its generated files, then each level's code.
+ function pilotBase(){return generatePlan({...startWorkspace('piloto',null),name:'Piloto automático',plan:Object.fromEntries(Object.entries(PLAN.answer).flatMap(([name,[kind,relation]])=>[[name+'Tipo',kind],[name+'Relacion',relation]]))});}
+ function withPilots(files){const base=pilotBase();return {...base,files:{...base.files,...Object.fromEntries(Object.entries(files).map(([name,text])=>[`pilotos/${name}.java`,text]))}};}
+ // Luna alone, four turns: her Patrulla takes her along the top row to (5, 0).
+ function patrolled(level,ws){const run=W.run(ws,{game:level.game??[],harness:PATROL+'\n'+Array(4).fill('flota.turno();').join('\n'),initial:level.initial??{}});const luna=robotsOf(run).Luna;return {run,ok:!!run.compiled&&!run.error&&luna?.x===5&&luna?.y===0};}
+ function fileOf(ws,name){const path=Object.keys(ws.files).find(p=>W.basename(p)===name+'.java');return path?ws.files[path]:'';}
+ function robotsOf(run){return Object.fromEntries((run?.result?.final?.objects??[]).filter(o=>o.robot).map(o=>[o.robot.name,o.robot]));}
+ // Robots never share a cell: Luna's step comes after Miaubit's, so the check is done once the turn ends.
+ function collided(run){const {Miaubit:m,Luna:l}=robotsOf(run);return !!m&&!!l&&m.x===l.x&&m.y===l.y;}
+ function pilotExplain(results){
+  const bad=results.find(p=>p.state!=='ok');if(!bad)return null;const index=results.indexOf(bad);
+  if(bad.state==='error')return /no tiene el método paso|Falta implementar/.test(bad.message)?'Escribe public void paso(Robot r) { } en Patrulla y en Directo.'
+   :/obstáculo|salir del mapa/.test(bad.message)?`${bad.label} chocó: avanza solo si r.puedeAvanzar() es true (misiones 29 y 38).`:`Al probar ${bad.label}, el programa se detuvo: ${bad.message}`;
+  if(index===0)return at(bad.from)===at(bad.to)?'Directo no movió a Miaubit: avanza mientras r.puedeAvanzar() sea true (misión 38).':`Directo llegó a ${at(bad.to)} y debía llegar a (2, 2): repite con while (r.puedeAvanzar()) { r.avanzar(); } (misión 38).`;
+  if(index===1)return `Con la roca delante, Patrulla debe girar a la derecha y quedar mirando al sur; quedó mirando al ${DIR_NAMES[bad.after?.Miaubit?.[2]]??'mismo lado'} en ${at(bad.to)}.`;
+  return 'Después de girar, Patrulla debe avanzar una casilla: revisa la rama if (r.puedeAvanzar()) { r.avanzar(); }.';
+ }
+ function fleetExplain(results){
+  const bad=results.find(p=>p.state!=='ok');if(!bad)return null;
+  if(bad.state==='error')return /tipo|constructor|parámetros/.test(bad.message)?'El juego crea new Flota(robots, pilotos): escribe un constructor que reciba los dos arreglos.':`Al jugar ${bad.label}, el programa se detuvo: ${bad.message}`;
+  const moved=name=>bad.after?.[name]&&bad.before?.[name]&&(bad.after[name][0]!==bad.before[name][0]||bad.after[name][1]!==bad.before[name][1]);
+  if(!moved('Miaubit')&&!moved('Luna'))return 'turno() no movió a nadie: dentro del for, llama a pilotos[i].paso(robots[i]).';
+  if(!moved('Luna'))return 'turno() solo movió al primer robot: recorre todo el arreglo con for (int i = 0; i < robots.length; i++) (misión 77).';
+  return 'Un robot usó el piloto equivocado: en el for, cada robot usa el piloto de su misma posición, pilotos[i].paso(robots[i]) (misión 85).';
+ }
  // A project can start with files from the previous one: the harvest reuses the player's own control.
  function startWorkspace(projectId,saved){
-  if(projectId!=='cosecha')return W.empty();
+  if(!['cosecha','piloto'].includes(projectId))return W.empty();
   const source=saved?.projects?.control?.workspace,fallback={'Boton.java':BOTON_PULSAR,'Control.java':CONTROL_FINAL},files={};
   for(const name of ['Boton.java','Control.java']){const own=source&&Object.keys(source.files).find(p=>W.basename(p)===name);files['control/'+name]=own?source.files[own]:fallback[name];}
   return {name:'',folders:['control'],files};
@@ -220,18 +343,20 @@
   }
   return layout;
  }
- // Runs the probes one by one, each from where the previous left Miaubit; stops at the first error.
+ // Runs the probes one by one, each from where the previous left the robots; stops at the first error.
+ // A probe expects `move` for Miaubit or `moves` per robot name, and optionally the direction Miaubit must `face`.
  function probe(level,ws){
   if(!level.probes)return [];
-  const start=RobotJava.execute('',level.initial??{}).initial.objects.find(o=>o.robot).robot;
-  let from=[start.x,start.y],stopped=false;
+  const places=final=>Object.fromEntries((final?.objects??[]).filter(o=>o.robot).map(o=>[o.robot.name,[o.robot.x,o.robot.y,o.robot.dir]]));
+  let before=places(RobotJava.execute('',level.initial??{}).initial),stopped=false;
   return level.probes.map((p,i)=>{
    if(stopped)return {...p,state:'skipped'};
    const run=W.run(ws,{game:level.game??[],harness:[level.setup,...level.probes.slice(0,i+1).map(q=>q.code)].filter(Boolean).join('\n'),initial:level.initial??{}});
-   if(!run.compiled){stopped=true;return {...p,state:'error',message:'el proyecto tiene errores.',from,to:from};}
-   const robot=run.result.final?.objects.find(o=>o.robot?.name==='Miaubit')?.robot,to=robot?[robot.x,robot.y]:from;
-   if(run.error){stopped=true;return {...p,state:'error',message:run.error.message,from,to};}
-   const result={...p,state:to[0]-from[0]===p.move[0]&&to[1]-from[1]===p.move[1]?'ok':'wrong',from,to};from=to;return result;
+   const after=run.compiled?places(run.result.final):before,from=before.Miaubit.slice(0,2),to=(after.Miaubit??before.Miaubit).slice(0,2),base={...p,from,to,before,after};
+   if(!run.compiled){stopped=true;return {...base,state:'error',message:'el proyecto tiene errores.'};}
+   if(run.error){stopped=true;return {...base,state:'error',message:run.error.message};}
+   const ok=Object.entries(p.moves??{Miaubit:p.move}).every(([name,[dx,dy]])=>after[name]&&after[name][0]-before[name][0]===dx&&after[name][1]-before[name][1]===dy)&&(p.face===undefined||after.Miaubit?.[2]===p.face);
+   before=after;return {...base,state:ok?'ok':'wrong'};
   });
  }
  for(const list of Object.values(levels))list.forEach(Object.freeze);
@@ -254,5 +379,5 @@
   return {version:1,projects:saved};
  }
  const finished=saved=>new Set(projects.filter(p=>saved.projects[p.id]?.done.length===p.levels.length).map(p=>p.id));
- globalThis.MiaubitLevels={get,count,evaluate,probe,harnessFor,playHarness,padLayout,reached,won,hudOf,startWorkspace,PAD,COLORS,restore,finished};
+ globalThis.MiaubitLevels={get,count,evaluate,probe,harnessFor,playHarness,padLayout,reached,won,collided,hudOf,startWorkspace,planCheck,generatePlan,PLAN,DIR_NAMES,PAD,COLORS,restore,finished};
 })();

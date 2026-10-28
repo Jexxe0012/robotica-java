@@ -41,12 +41,14 @@
   MiaubitStage.mount($('stage-canvas')).then(()=>{MiaubitStage.show(frame);loading.hidden=true;describe(frame);}).catch(()=>{loading.textContent='No se pudo cargar el escenario. Revisa tu conexión y recarga la página.';});
  }
  function fitStage(){MiaubitStage.setZoom($('stage').clientWidth>=MiaubitStage.size.width*2+300?2:1);}
- function describe(frame){const robot=frame?.robots[0];$('stage-canvas').setAttribute('aria-label',robot?`Escenario de pruebas: ${robot.name} en ${at([robot.x,robot.y])}.`:'Escenario de pruebas.');}
+ function describe(frame){const robots=frame?.robots??[];$('stage-canvas').setAttribute('aria-label',robots.length?`Escenario de pruebas: ${robots.map(r=>`${r.name} en ${at([r.x,r.y])}`).join(', ')}.`:'Escenario de pruebas.');}
  function renderProbes(results){
   $('probes').replaceChildren(...(level.probes??[]).map((p,i)=>{
    const result=results?.[i],state=result?.state??'pending',item=node('li');item.dataset.state=state;
-   const detail=state==='pending'?`Debe mover a Miaubit una casilla ${TOWARD[p.dir]}.`:state==='ok'?`Movió a Miaubit de ${at(result.from)} a ${at(result.to)}.`
-    :state==='wrong'?`Movió a Miaubit de ${at(result.from)} a ${at(result.to)}; debía ir una casilla ${TOWARD[p.dir]}.`:state==='error'?`Se detuvo: ${result.message}`:'No se llegó a probar.';
+   // Probes may move several robots or turn Miaubit: describe what really happened, then what was expected.
+   const expect=p.expect??`Debía ir una casilla ${TOWARD[p.dir]}.`,moved=result&&result.before?(p.moves?Object.keys(p.moves).map(name=>`${name}: ${at(result.before[name])} → ${at(result.after[name])}`).join(' · ')
+    :`${at(result.from)===at(result.to)?`Miaubit se quedó en ${at(result.to)}`:`Movió a Miaubit de ${at(result.from)} a ${at(result.to)}`}${result.before.Miaubit[2]!==result.after.Miaubit?.[2]?` y quedó mirando al ${L.DIR_NAMES[result.after.Miaubit[2]]}`:''}`):'';
+   const detail=state==='pending'?p.expect??`Debe mover a Miaubit una casilla ${TOWARD[p.dir]}.`:state==='ok'?`${moved}.`:state==='wrong'?`${moved}. ${expect}`:state==='error'?`Se detuvo: ${result.message}`:'No se llegó a probar.';
    item.append(node('span','probe-mark',{ok:'✓',wrong:'✗',error:'✗',skipped:'·'}[state]??String(i+1)),node('code','',p.call),node('span','probe-detail',detail));
    return item;
   }));
@@ -88,10 +90,10 @@
   s.busy=true;s.presses.push(name);
   const result=W.run(entry.workspace,{game:level.game??[],harness:L.playHarness(level,s.presses),initial:level.initial??{}});
   if(!result.compiled){stopSession('Corrige los errores y pulsa Probar para usar el control.');return;}
-  const frames=W.frames(result.result),fresh=frames.slice(s.count-1);
-  if(result.error){
-   s.presses.pop();const dir=W.blocked(result,entry.workspace);
-   say(dir!==null?'¡Pum! Ahí hay un borde o una roca: prueba otra flecha.':/energía/.test(result.error.message)?'Miaubit se quedó sin energía: pulsa Reiniciar tablero para empezar otra vez.':`Al presionar "${name}" ocurrió esto: ${result.error.message}`,'error');
+  const frames=W.frames(result.result),fresh=frames.slice(s.count-1),crash=!result.error&&L.collided(result);
+  if(result.error||crash){
+   s.presses.pop();const dir=crash?{este:0,sur:1,oeste:2,norte:3}[L.PAD[name]]:W.blocked(result,entry.workspace);
+   say(crash?'¡Cuidado! Luna pasa por esa casilla en este turno: elige otro movimiento o gana tiempo.':dir!==null?'¡Pum! Ahí hay un borde o una roca: prueba otra flecha.':/energía/.test(result.error.message)?'Miaubit se quedó sin energía: pulsa Reiniciar tablero para empezar otra vez.':`Al presionar "${name}" ocurrió esto: ${result.error.message}`,'error');
    await MiaubitStage.play(fresh,{bump:dir});
    if(session===s){MiaubitStage.show(s.good);s.busy=false;}
    return;
@@ -124,7 +126,52 @@
   return true;
  }
  function close(){if(!project)return;persist(true);runId++;session=null;MiaubitStage.sleep();$('run').disabled=false;$('taller').hidden=true;$('level-done').hidden=true;project=null;document.title='Modo Proyecto · Las aventuras de Miaubit';}
- function renderAll(){renderHeader();renderTree();renderTabs();renderEditor();renderProblems();renderOutput();renderTasks();}
+ function renderAll(){renderHeader();renderTree();renderTabs();renderEditor();renderProblems();renderOutput();renderTasks();renderPlan();}
+ // The class plan: a card per class with its kind and relation; lines show the relations chosen so far.
+ function renderPlan(){
+  $('plan').hidden=!level?.plan;if(!level?.plan)return;
+  const checks=L.planCheck(entry.workspace),cards=$('plan-cards'),options=(map,value)=>[node('option','','Elige…'),...Object.entries(map).map(([key,label])=>{const o=node('option','',label);o.value=key;o.selected=key===value;return o;})];
+  if(!cards.children.length){
+   for(const name of [...L.PLAN.classes,'Robot']){
+    const card=node('article','plan-card');card.dataset.name=name;card.append(node('h3','',name));
+    if(name==='Robot'){card.dataset.game='';card.append(node('p','plan-hint','Clase del juego: Miaubit y Luna son objetos Robot.'));cards.append(card);continue;}
+    for(const [field,label] of [['Tipo','Es'],['Relacion','Relación']]){
+     const wrap=node('label','plan-field'),select=node('select');select.dataset.field=field;select.setAttribute('aria-label',`${label} de ${name}`);
+     select.addEventListener('change',()=>{entry.workspace.plan={...(entry.workspace.plan??{}),[name+field]:select.value};changed();renderPlan();});
+     wrap.append(node('span','',label),select);card.append(wrap);
+    }
+    card.append(node('p','plan-hint'));cards.append(card);
+   }
+  }
+  for(const check of checks){
+   const card=cards.querySelector(`[data-name="${check.name}"]`),[kind,relation]=card.querySelectorAll('select');
+   kind.replaceChildren(...options(L.PLAN.kinds,check.kind));relation.replaceChildren(...options(L.PLAN.relations,check.relation));
+   card.dataset.state=check.kindOk&&check.relationOk?'ok':check.kind||check.relation?'wrong':'todo';card.dataset.kind=check.kind;
+   card.querySelector('.plan-hint').textContent=check.hint??'✓ Correcto';
+  }
+  const done=checks.every(c=>c.kindOk&&c.relationOk),generated=L.PLAN.classes.every(n=>files().some(p=>W.basename(p)===n+'.java'));
+  $('plan-generate').disabled=!done||generated;
+  $('plan-status').textContent=generated?'Los archivos del plano están en tu proyecto.':done?'El plano está listo: genera sus archivos.':`Faltan ${checks.filter(c=>!(c.kindOk&&c.relationOk)).length} piezas por decidir bien.`;
+  setTimeout(drawPlanLines);
+ }
+ function drawPlanLines(){
+  const board=$('plan-board'),paths=$('plan-paths');if($('plan').hidden||!board.offsetWidth){paths.replaceChildren();return;}
+  const box=board.getBoundingClientRect(),rect=name=>$('plan-cards').querySelector(`[data-name="${name}"]`).getBoundingClientRect();
+  const edge=(r,side)=>side==='top'?[r.left+r.width/2-box.left,r.top-box.top]:side==='bottom'?[r.left+r.width/2-box.left,r.bottom-box.top]:side==='left'?[r.left-box.left,r.top+r.height/2-box.top]:[r.right-box.left,r.top+r.height/2-box.top];
+  const line=(from,to,kind)=>{const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',`M${from[0]} ${from[1]} L${to[0]} ${to[1]}`);path.setAttribute('class',`plan-line ${kind}`);path.setAttribute(kind==='implementa'?'marker-end':'marker-start',`url(#plan-${kind==='implementa'?'implements':'contains'})`);return path;};
+  const list=[];
+  for(const check of L.planCheck(entry.workspace)){
+   if(check.relation==='implementa'&&check.name!=='Piloto')list.push(line(edge(rect(check.name),'top'),edge(rect('Piloto'),'bottom'),'implementa'));
+   if(check.relation==='contiene'){const from=rect(check.name);list.push(line(edge(from,'top'),edge(rect('Robot'),'bottom'),'contiene'),line(edge(from,'left'),edge(rect('Piloto'),'right'),'contiene'));}
+  }
+  paths.replaceChildren(...list);
+ }
+ function generateFromPlan(){
+  const next=L.generatePlan(entry.workspace);if(!next)return;
+  const created=Object.keys(next.files).filter(p=>!(p in entry.workspace.files));entry.workspace=next;
+  if(created[0])openFile(created[0],false);
+  say(`¡Tu plano se convirtió en código! Se crearon ${created.length} archivos en la carpeta pilotos.`,'ok');changed(true);renderTabs();renderEditor();renderPlan();
+ }
  function renderHeader(){
   const info=project.levels[levelIndex];
   $('taller-kicker').textContent=`PROYECTO ${pad(project.number)} · NIVEL ${levelIndex+1} DE ${project.levels.length}`;
@@ -314,7 +361,7 @@
   $('level-done-title').textContent='¡Nivel completado!';
   const rest=total-levelIndex-1,coming=rest===1?`El nivel ${total} llega`:rest===2?`Los niveles ${total-1} y ${total} llegan`:`Los niveles ${levelIndex+2} a ${total} llegan`;
   $('level-done-text').textContent=next?`Tu código pasa al siguiente nivel: ${project.levels[levelIndex+1].title}.`:rest>0?`Completaste los niveles disponibles. ${coming} en una próxima actualización; tu proyecto queda guardado en este navegador.`
-   :`¡Terminaste ${project.title}! ${project.built}${projects[project.number]?` El Proyecto ${project.number+1}, ${projects[project.number].title}, ya está desbloqueado.`:''}`;
+   :`¡Terminaste ${project.title}! ${project.built}${projects[project.number]?` El Proyecto ${project.number+1}, ${projects[project.number].title}, ya está desbloqueado.`:' ¡Completaste los tres proyectos del Modo Proyecto!'}`;
   $('level-next').textContent=next?'Siguiente nivel ▶':'Volver a los proyectos';
   const confetti=dialog.querySelector('.confetti');confetti.replaceChildren();
   if(!reduced())for(let i=0;i<28;i++){const bit=node('i');bit.style.left=`${(i*37)%100}%`;bit.style.background=['#ffd95a','#b3a9d8','#6dbb91','#d59b48'][i%4];bit.style.animationDelay=`${(i%7)*60}ms`;confetti.append(bit);}
@@ -342,7 +389,8 @@
  $('hint').addEventListener('click',()=>{const hints=level.hints??[];if(!hints.length)return;say(hints[hintIndex%hints.length],'hint');hintIndex++;$('hint').textContent='Otra pista';});
  $('run').addEventListener('click',runCode);
  $('stage-replay').addEventListener('click',async()=>{if(!replay)return;$('stage-replay').disabled=true;await MiaubitStage.play(replay.frames,{bump:replay.bump,success:replay.success});$('stage-replay').disabled=false;});
- addEventListener('resize',()=>{if(project&&level?.stage)fitStage();});
+ addEventListener('resize',()=>{if(project&&level?.stage)fitStage();if(project&&level?.plan)drawPlanLines();});
+ $('plan-generate').addEventListener('click',generateFromPlan);
  for(const key of $('pad').querySelectorAll('.pad-key'))key.addEventListener('click',()=>pressPad(key.dataset.key));
  $('pad').addEventListener('keydown',e=>{if(KEYS[e.key]){e.preventDefault();pressPad(KEYS[e.key]);}});
  $('pad-reset').addEventListener('click',()=>{if(!session)return;const first=session.first;startSession();if(session){run=session.base;MiaubitStage.show(first);describe(first);renderOutput();renderHud(run);renderTasks();}});

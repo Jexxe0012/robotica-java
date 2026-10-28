@@ -35,7 +35,7 @@
  function playableText(){
   const ready=projects.filter(p=>MiaubitLevels.count(p.id)===p.levels.length).length,rest=projects.length-ready;
   const done=ready===1?'El Proyecto 1 ya se puede jugar completo':`Los proyectos 1 ${ready===2?'y':'a'} ${ready} ya se pueden jugar completos`;
-  return rest?`${done}; ${rest===1?'el último llega en la próxima actualización':'los demás llegan en las próximas actualizaciones'}.`:`${done}.`;
+  return rest?`${done}; ${rest===1?'el último llega en la próxima actualización':'los demás llegan en las próximas actualizaciones'}.`:`Los ${['','','dos','tres'][ready]??ready} proyectos ya se pueden jugar completos.`;
  }
  function renderGate(state){
   const gate=$('gate'),dev=$('gate-dev'),next=$('gate-continue');

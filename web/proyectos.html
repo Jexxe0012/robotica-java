@@ -82,6 +82,14 @@
    <button id="reset-project" class="text-tool" type="button">Empezar el proyecto de nuevo</button>
   </aside>
   <section class="workbench" aria-label="Editor">
+   <div id="plan" class="plan" hidden>
+    <div class="plan-head"><h2 class="panel-title">Plano de clases</h2><p class="plan-lead">Decide qué es cada pieza y cómo se relaciona con las demás. Robot ya existe: lo pone el juego.</p></div>
+    <div id="plan-board" class="plan-board">
+     <svg id="plan-lines" class="plan-lines" aria-hidden="true"><defs><marker id="plan-implements" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path d="M1 1 11 6 1 11Z"/></marker><marker id="plan-contains" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto"><path d="M1 5 7 1 13 5 7 9Z"/></marker></defs><g id="plan-paths"></g></svg>
+     <div id="plan-cards" class="plan-cards"></div>
+    </div>
+    <div class="plan-actions"><button id="plan-generate" class="button primary" type="button" disabled>Generar archivos del plano</button><p id="plan-status" class="plan-status" role="status"></p></div>
+   </div>
    <div id="stage" class="stage" hidden>
     <div class="stage-screen"><div id="stage-canvas" class="stage-canvas" role="img" aria-label="Escenario de pruebas"></div><p id="stage-loading" class="stage-loading">Preparando el escenario…</p></div>
     <div class="stage-side">

@@ -66,6 +66,33 @@
 .probes li[data-state="wrong"] .probe-mark,.probes li[data-state="error"] .probe-mark{border-color:#e38d79;background:#e38d79;color:#1d1214}
 .probes li[data-state="wrong"] .probe-detail,.probes li[data-state="error"] .probe-detail{color:#ead2cc}
 .workbench:has(.stage:not([hidden])) .editor{height:clamp(220px,34vh,420px)}
+.plan{padding:12px;border-bottom:2px solid #2b3f37;background:linear-gradient(#8fd3c10c 1px,transparent 1px) 0 0/20px 20px,linear-gradient(90deg,#8fd3c10c 1px,transparent 1px) 0 0/20px 20px,#0b1513}
+.plan-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-bottom:12px}
+.plan-head .panel-title{margin:0}
+.plan-lead{margin:0;color:var(--muted);font-size:.84rem}
+.plan-board{position:relative}
+.plan-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.plan-line{fill:none;stroke-width:2}
+.plan-line.implementa{stroke:var(--lilac);stroke-dasharray:6 4}
+.plan-line.contiene{stroke:var(--sun)}
+#plan-implements path{fill:#0b1513;stroke:var(--lilac);stroke-width:1.5}
+#plan-contains path{fill:var(--sun)}
+.plan-cards{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:". piloto robot" "patrulla directo flota";gap:46px 18px}
+.plan-card{display:grid;align-content:start;gap:6px;padding:10px;border:2px solid var(--line);background:#0f1d19;box-shadow:4px 4px 0 #05090a}
+.plan-card[data-name="Piloto"]{grid-area:piloto}.plan-card[data-name="Robot"]{grid-area:robot}.plan-card[data-name="Patrulla"]{grid-area:patrulla}.plan-card[data-name="Directo"]{grid-area:directo}.plan-card[data-name="Flota"]{grid-area:flota}
+.plan-card h3{margin:0;color:#f1edff;font:700 1rem var(--pixel)}
+.plan-card[data-kind="interfaz"]{border-style:dashed;border-color:var(--violet)}
+.plan-card[data-kind="interfaz"] h3::before{content:'«interfaz» ';color:var(--lilac);font-size:.7rem}
+.plan-card[data-state="ok"]{border-color:var(--mint)}
+.plan-card[data-state="wrong"]{border-color:#e38d79}
+.plan-card[data-game]{border-color:#3d3b55;background:#14121f}
+.plan-field{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:center;gap:6px;color:var(--muted);font-size:.78rem}
+.plan-field select{min-width:0;min-height:32px;padding:4px 6px;border:2px solid #36544a;background:#08110f;color:var(--ink);font:600 .8rem var(--font)}
+.plan-hint{margin:0;color:var(--muted);font-size:.78rem}
+.plan-card[data-state="ok"] .plan-hint{color:var(--mint)}
+.plan-card[data-state="wrong"] .plan-hint{color:#f0c27a}
+.plan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px}
+.plan-status{margin:0;color:var(--lilac);font:700 .82rem var(--pixel)}
 .probes-panel,.pad-panel,.hud-panel{display:flex;flex-direction:column;gap:8px}
 .hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
 .hud dt{grid-row:1;padding:6px 8px 0;border:2px solid #3b5d74;border-bottom:0;background:#0f1d26;color:#8fd3f0;font:700 .62rem var(--pixel);letter-spacing:.08em;text-transform:uppercase}
@@ -183,6 +210,8 @@
  .editor,.workbench:has(.stage:not([hidden])) .editor{height:340px}
  .stage{grid-template-columns:minmax(0,1fr);padding:10px 8px}
  .stage-screen{justify-self:center}
+ .plan-cards{grid-template-columns:minmax(0,1fr);grid-template-areas:"piloto" "robot" "patrulla" "directo" "flota";gap:10px}
+ .plan-lines{display:none}
 }
 @media (prefers-reduced-motion:reduce){
  .object,.bubble.talk,.tasks li.just-done,.confetti i{animation:none}

@@ -16,7 +16,8 @@
  const basename=path=>path.slice(path.lastIndexOf('/')+1),dirname=path=>path.includes('/')?path.slice(0,path.lastIndexOf('/')):'';
  const join=(folder,name)=>folder?folder+'/'+name:name;
  const empty=()=>({name:'',folders:[],files:{}});
- const clone=ws=>({name:ws.name,folders:[...ws.folders],files:{...ws.files}});
+ // A workspace may carry a class plan (short text choices made on the diagram) next to its files.
+ const clone=ws=>({name:ws.name,folders:[...ws.folders],files:{...ws.files},...(ws.plan?{plan:{...ws.plan}}:{})});
  // Comments are blanked out character by character so line numbers stay the same.
  const strip=text=>text.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,match=>match.replace(/[^\n]/g,' '));
  const lineAt=(text,index)=>text.slice(0,index).split('\n').length;
@@ -123,6 +124,10 @@
    if(!file.test(path)||typeof text!=='string'||text.length>LIMITS.text)continue;
    ws.files[path]=text;
    for(let dir=dirname(path);dir&&!ws.folders.includes(dir);dir=dirname(dir))ws.folders.push(dir);
+  }
+  if(raw.plan&&typeof raw.plan==='object'){
+   const plan={};for(const [key,value] of Object.entries(raw.plan).slice(0,16))if(/^[A-Za-z]{1,24}$/.test(key)&&typeof value==='string'&&/^[a-z]{0,12}$/.test(value))plan[key]=value;
+   ws.plan=plan;
   }
   ws.folders.sort();return ws;
  }
