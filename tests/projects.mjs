@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {loadStaticAssets} from '../scripts/static-assets.mjs';
-import '../web/engine.js';import '../web/lessons.js';import '../web/proyectos/catalogo.js';
-const {missionIds,projects,unlockState,available,isDevHost}=MiaubitProjects;
+import '../web/engine.js';import '../web/lessons.js';import '../web/proyectos/catalogo.js';import '../web/proyectos/espacio.js';import '../web/proyectos/niveles.js';
+const {missionIds,projects,unlockState,available,isDevHost}=MiaubitProjects,W=MiaubitWorkshop,Levels=MiaubitLevels;
 
 // The workshop counts exactly the adventure's 90 missions.
 assert.deepEqual([...missionIds],JavaCourse.levels.map(m=>m.id));
@@ -49,10 +49,82 @@ for(const [index,project] of projects.entries()){
  }
 }
 
+// Workshop names follow Java conventions and explain how to fix them; operations never mutate their input.
+let ws=W.empty();
+assert.match(W.projectNameError(''),/nombre/);assert.equal(W.projectNameError('Control de Miaubit'),null);assert(W.projectNameError('a/b'));assert(W.projectNameError('x'.repeat(31)));
+assert.match(W.addFolder(ws,'','Src').error,/minúsculas/);assert.match(W.addFolder(ws,'','mi carpeta').error,/espacios/);
+let step=W.addFolder(ws,'','src');assert.deepEqual(ws.folders,[]);ws=step.workspace;assert.equal(step.path,'src');assert.match(W.addFolder(ws,'','src').error,/Ya existe/);
+assert.match(W.addFile(ws,'src','boton.java').error,/mayúscula: Boton\.java/);assert.match(W.addFile(ws,'src','Boton').error,/Boton\.java/);
+assert.match(W.addFile(ws,'src','Boton.txt').error,/\.java/);assert.match(W.addFile(ws,'src','Botón.java').error,/sin acentos/);
+assert.match(W.addFile(ws,'src','Robot.java').error,/juego/);assert.match(W.addFile(ws,'src','Mando.java',['Mando']).error,/juego/);
+step=W.addFile(ws,'src','Boton.java');ws=step.workspace;assert.equal(step.path,'src/Boton.java');assert.match(ws.files['src/Boton.java'],/Boton/);
+assert.match(W.addFile(ws,'','Boton.java').error,/Ya existe/);
+let nested=W.addFolder(ws,'src','ui').workspace;nested=W.addFile(nested,'src/ui','Panel.java').workspace;
+const pruned=W.remove(nested,'src/ui');assert.deepEqual(pruned.folders,['src']);assert.deepEqual(Object.keys(pruned.files),['src/Boton.java']);assert.equal(Object.keys(nested.files).length,2);
+
+// One class per file, named like the file, with nothing outside it; excluded constructions get the missions' alternative.
+const problems=(text,path='src/Boton.java')=>W.analyze(path,text).problems;
+assert.match(problems('// nada\n')[0].message,/Declara la clase/);assert.equal(problems('class Boton {\n}\n').length,0);
+assert.match(problems('class Panel { }')[0].message,/debe contener la clase Boton/);
+assert.match(problems('class Boton { }\nclass Panel { }')[0].message,/una sola clase/);assert.equal(problems('class Boton { }\nclass Panel { }')[0].line,2);
+assert.match(problems('class Boton { }\nrobot.este();')[0].message,/sueltas/);
+assert.deepEqual(problems('class Boton {\n  int x\n}').map(p=>[p.severity,p.line]),[['error',3]]);
+for(const [code,pattern,line] of [['class Boton {\n  void f(int a) {\n    if (a == 0) { } else if (a == 1) { }\n  }\n}',/else if/,3],['class Boton {\n  void f(int a) {\n    switch (a) { }\n  }\n}',/switch/,3],['import java.util.*;\nclass Boton { }',/import/,1],['class Boton { }\npackage juego;',/package/,2]]){
+ const warning=problems(code).find(p=>p.severity==='warning');assert(warning,code);assert.match(warning.message,pattern);assert.equal(warning.line,line,code);
+}
+assert.equal(problems('class Boton {\n  // else if y switch en un comentario\n}').length,0);
+
+// Files join in a stable order; errors point back to their own file and line.
+const l1=Levels.get('control',0),l2=Levels.get('control',1),boton=l2.solution.files['src/Boton.java'];
+const project={name:'P',folders:['src','src/ui'],files:{'src/ui/Control.java':'class Control {\n  Boton b = new Boton("sur", "rojo");\n  void romper() {\n    Robot r = null;\n    r.este();\n  }\n}','src/Boton.java':boton}};
+const joined=W.combine(project,{game:[{path:'Mando.java',text:'interface Mando { void presionar(String b, Robot r); }'}],harness:'Control c = new Control();\nc.romper();'});
+assert.deepEqual(joined.starts.map(s=>s.path),['Mando.java','src/Boton.java','src/ui/Control.java','(prueba)']);
+for(const start of joined.starts)assert.deepEqual(W.locate(joined.starts,start.from),{path:start.path,line:1,game:start.game,harness:start.harness});
+let result=W.run(project,{harness:'Control c = new Control();\nc.romper();'});
+assert.equal(result.compiled,true);assert.deepEqual([result.error.path,result.error.line,result.error.harness],['src/ui/Control.java',5,false]);
+result=W.run({...project,files:{'src/Boton.java':'class Boton { }'}},{harness:'Boton b = new Boton("x", "y");'});
+assert.equal(result.error.harness,true);assert.equal(result.error.code,'Boton b = new Boton("x", "y");');
+result=W.run({...project,files:{'src/Boton.java':'class Boton {\n  int x\n}'}},{harness:'Boton b = new Boton();'});
+assert.equal(result.compiled,false);assert.equal(result.result,null);
+const replay=()=>W.run(project,{harness:'Control c = new Control();'}).result.final;assert.deepEqual(replay(),replay());
+
+// Workspaces saved in the browser are sanitized before use.
+const restored=W.restore({name:'x'.repeat(50),folders:['src','../etc','Src',7],files:{'src/Boton.java':'class Boton {}','../x.java':'x','ui/Panel.java':'class Panel {}','src/nota.txt':'x','src/Largo.java':'x'.repeat(20001)}});
+assert.equal(restored.name.length,30);assert.deepEqual(restored.folders,['src','ui']);assert.deepEqual(Object.keys(restored.files).sort(),['src/Boton.java','ui/Panel.java']);
+for(const bad of [null,'x',{name:1,folders:[],files:{}},{name:'',folders:{},files:{}}])assert.equal(W.restore(bad),null);
+
+// The editor's highlighter escapes the code it colors.
+const colored=W.highlight('class A { String s = "<b>"; } // fin');
+assert(colored.includes('&lt;b&gt;'));assert(!colored.includes('<b>'));assert.match(colored,/tk-k">class/);assert.match(colored,/tk-c">\/\/ fin/);
+assert.equal(W.highlight('a < b && c > d').replace(/<span[^>]*>|<\/span>/g,''),'a &lt; b &amp;&amp; c &gt; d');
+
+// Playable levels: each starts unfinished from the previous level's files, and its solution completes it without warnings.
+for(const project of projects){
+ let previous=W.empty();
+ for(let i=0;i<Levels.count(project.id);i++){
+  const level=Levels.get(project.id,i),run=ws=>W.run(ws,{game:level.game??[],harness:level.harness??'',initial:level.initial??{}});
+  assert(level.intro&&level.hints.length&&level.tasks.length,`${project.id} level ${i+1}`);
+  assert.equal(Levels.evaluate(level,previous,run(previous)).complete,false,`${project.id} level ${i+1} starts unfinished`);
+  assert.equal(Levels.evaluate(level,level.solution,run(level.solution)).complete,true,`${project.id} level ${i+1} solution`);
+  assert.deepEqual(W.problemsOf(level.solution),[],`${project.id} level ${i+1} solution follows the rules`);
+  if(level.tasks.some(t=>t.needsRun))assert.equal(Levels.evaluate(level,level.solution).complete,false,'run tasks wait for a run');
+  previous=level.solution;
+ }
+}
+assert.equal(Levels.count('control'),2);assert.equal(Levels.get('control',2),null);assert.equal(Levels.count('cosecha'),0);
+const noThis={...l2.solution,files:{'src/Boton.java':boton.replace(/this\./g,'')}},missing=Levels.evaluate(l2,noThis,W.run(noThis,{harness:l2.harness}));
+assert.equal(missing.complete,false);assert.match(missing.tasks.find(t=>t.explain).explain,/misión 53/);
+
+// Browser progress is sanitized; a project is finished only with all its levels.
+const progress=Levels.restore({projects:{control:{workspace:l1.solution,level:9,done:[1,1,0,7,'x']},piloto:{workspace:null},otro:{workspace:l1.solution}}});
+assert.deepEqual(Object.keys(progress.projects),['control']);assert.deepEqual(progress.projects.control.done,[0,1]);assert.equal(progress.projects.control.level,4);
+assert.deepEqual([...Levels.finished(progress)],[]);assert.deepEqual(Levels.restore(null),{version:1,projects:{}});
+assert.deepEqual([...Levels.finished(Levels.restore({projects:{control:{workspace:l1.solution,level:4,done:[0,1,2,3,4]}}}))],['control']);
+
 // The page loads every file of the mode; the adventure only gains one link to it.
 const page=await readFile('web/proyectos.html','utf8'),home=await readFile('web/index.html','utf8');
 for(const file of (await readdir('web/proyectos')).filter(name=>/\.(css|js)$/.test(name)))assert(page.includes(`"proyectos/${file}"`),file+' is referenced by proyectos.html');
-for(const dependency of ['assets.js','worlds.js'])assert(page.includes(`"${dependency}"`),dependency);
+for(const dependency of ['assets.js','worlds.js','engine.js'])assert(page.includes(`"${dependency}"`),dependency);
 assert(page.includes('src="assets/atlas-crt.png"'));
 assert.equal(home.match(/href="proyectos\.html"/g)?.length,1);
 
@@ -65,4 +137,4 @@ assert.equal(assets['/proyectos/proyectos.css']?.type,'text/css; charset=utf-8')
 assert(assets['/proyectos/proyectos.css'].body.includes(`url('../assets/fonts/pixelify-sans.ttf?v=${version}')`));
 assert(assets['/index.html'].body.includes(`href="proyectos.html?v=${version}"`));
 
-console.log('PASS: project mode catalog, 90-mission unlock, local-only early access, ordered projects, documented levels and versioned page.');
+console.log('PASS: project mode catalog, 90-mission unlock, local-only early access, ordered projects, documented levels, workshop files and errors, playable levels and versioned page.');

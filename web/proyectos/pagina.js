@@ -8,7 +8,7 @@
   piloto:'M9 1h6v3h5v5h3v6h-3v5h-5v3H9v-3H4v-5H1V9h3V4h5zM10 7v9h4V7z',
   lock:'M7 2h10v3h2v6h2v12H3V11h2V5h2zM9 6v5h6V6zM11 14v5h2v-5z'
  };
- const DEV_KEY='miaubit-proyectos-dev',local=isDevHost(location.hostname),finished=new Set();
+ const DEV_KEY='miaubit-proyectos-dev',local=isDevHost(location.hostname);
  let completed=null,failed=false,attempt=0;
  const regionName=index=>globalThis.AtlasWorlds?.[index]?.title??`Región ${index+1}`,accent=index=>globalThis.AtlasWorlds?.[index]?.accent??'#6dbb91';
  const missionNumber=id=>Number(id.slice(1));
@@ -48,7 +48,7 @@
    gate.dataset.state='open';
    $('gate-label').textContent=state.dev?'MODO DESARROLLO · SOLO EN ESTE EQUIPO':'TALLER ABIERTO';
    $('gate-title').textContent=state.dev?'Taller abierto para desarrollar':'¡Completaste la expedición!';
-   $('gate-text').textContent=(state.dev?`El taller se abrió sin las 90 misiones; llevas ${state.done}. `:'Las 90 misiones te dieron todas las piezas. ')+'Los niveles de cada proyecto llegan en las próximas actualizaciones.';
+   $('gate-text').textContent=(state.dev?`El taller se abrió sin las 90 misiones; llevas ${state.done}. `:'Las 90 misiones te dieron todas las piezas. ')+'El Proyecto 1 ya tiene sus primeros niveles; el resto llega en las próximas actualizaciones.';
   }else{
    gate.dataset.state='locked';$('gate-label').textContent='TALLER CERRADO';
    $('gate-title').textContent='Completa las 90 misiones para abrir el taller';
@@ -57,8 +57,9 @@
   }
  }
  function projectCard(project,index,state){
-  const open=available(index,!!state?.unlocked,finished);
-  const status=!state?.unlocked?['locked','Bloqueado','Completa las 90 misiones']:!open?['locked','Bloqueado',`Termina el Proyecto ${index}`]:['building','En construcción','Llega en la próxima actualización'];
+  const open=available(index,!!state?.unlocked,MiaubitTaller.finished()),playable=MiaubitLevels.count(project.id)>0,progress=MiaubitTaller.progress(project.id);
+  const status=!state?.unlocked?['locked','Bloqueado','Completa las 90 misiones']:!open?['locked','Bloqueado',`Termina el Proyecto ${index}`]
+   :playable?['open',progress?.done.length?`${progress.done.length} de ${project.levels.length} niveles`:'Disponible',progress?'Continuar en el taller ▶':'Abrir el taller ▶']:['building','En construcción','Llega en la próxima actualización'];
   const card=node('article','project');card.dataset.state=status[0];card.setAttribute('aria-labelledby',`project-${project.id}`);
   const head=node('header','project-head'),badge=node('span','project-icon'),titles=node('div'),title=node('h3','',project.title);
   title.id=`project-${project.id}`;badge.append(icon(status[0]==='locked'?'lock':project.id));
@@ -68,10 +69,14 @@
    const item=node('li'),body=node('div'),missions=node('p','missions');
    missions.append(node('span','missions-label','Aprendido en'));
    for(const id of level.missions){const link=node('a','',`m${missionNumber(id)}`);link.href='./#'+id;link.setAttribute('aria-label',`Repasar la misión ${missionNumber(id)}`);missions.append(link);}
-   body.append(node('strong','',level.title),node('p','',level.activity),missions);item.append(node('span','level-number',String(i+1)),body);levels.append(item);
+   const done=!!progress?.done.includes(i),heading=node('strong','',level.title);
+   if(status[0]==='open'&&!MiaubitLevels.get(project.id,i))heading.append(node('span','soon-tag','Pronto'));
+   body.append(heading,node('p','',level.activity),missions);item.append(node('span',done?'level-number done':'level-number',done?'✓':String(i+1)),body);levels.append(item);
   });
-  const foot=node('footer','project-foot'),button=node('button','button',status[2]);
-  button.type='button';button.disabled=true;foot.append(node('span','project-state',status[1]),button);
+  const foot=node('footer','project-foot');let button;
+  if(status[0]==='open'){button=node('a','button primary',status[2]);button.href=`#taller-${project.id}`;}
+  else{button=node('button','button',status[2]);button.type='button';button.disabled=true;}
+  foot.append(node('span','project-state',status[1]),button);
   card.append(head,node('p','project-summary',project.summary),levels,foot);
   return card;
  }
@@ -89,9 +94,18 @@
    if(current===attempt)completed=data.completed;
   }catch{if(current===attempt)failed=true;}
   finally{clearTimeout(timeout);}
-  if(current===attempt)render();
+  if(current===attempt){render();route();}
+ }
+ // #taller-<project> opens the workshop once the progress says the project is available.
+ function route(){
+  const match=location.hash.match(/^#taller-([a-z]+)$/),state=completed&&unlockState(completed,devMode()),index=match?projects.findIndex(p=>p.id===match[1]):-1;
+  if(index>=0&&state&&available(index,state.unlocked,MiaubitTaller.finished())&&MiaubitTaller.open(projects[index].id)){$('inicio').hidden=true;scrollTo(0,0);return;}
+  if(match&&(state||failed))history.replaceState(null,'',location.pathname+location.search);
+  const leaving=!$('taller').hidden;MiaubitTaller.close();$('inicio').hidden=false;
+  if(leaving){render();$('projects-title').scrollIntoView();}
  }
  $('gate-retry').addEventListener('click',load);
  $('gate-dev').addEventListener('click',()=>setDevMode(!devMode()));
+ addEventListener('hashchange',route);
  renderStats();load();
 })();
