@@ -12,7 +12,8 @@
   return loading??=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=SiteAssets.url('phaser.js');script.onload=resolve;script.onerror=()=>{loading=null;reject(new Error('phaser'));};document.head.append(script);});
  }
  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
- const tween=(config)=>new Promise(resolve=>scene.tweens.add({...config,onComplete:resolve}));
+ // A hidden tab stops animation frames; the timer makes sure the run still finishes and play() snaps the final state.
+ const tween=(config)=>new Promise(resolve=>{let done=false;const finish=()=>{if(!done){done=true;resolve();}};scene.tweens.add({...config,onComplete:finish});setTimeout(finish,(config.duration??0)*(config.yoyo?2:1)+400);});
  function drawBoard(g){
   g.fillStyle(0x08110f).fillRect(0,0,W,H).lineStyle(2,0x5a4f96).strokeRect(PAD-3,PAD-3,COLS*CELL+6,ROWS*CELL+6);
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -109,10 +110,12 @@
   async play(frames,{bump:blockedDir=null,success=false}={}){
    const mine=++token;latest=frames.at(-1)??latest;if(!scene||!frames.length)return;
    snap(frames[0]);
-   if(reduced()){snap(frames.at(-1));}
-   else for(let i=1;i<frames.length;i++){if(mine!==token)return;await step(frames[i-1],frames[i]);}
+   if(!reduced()&&!document.hidden)for(let i=1;i<frames.length;i++){if(mine!==token)return;await step(frames[i-1],frames[i]);}
    if(mine!==token)return;
+   snap(frames.at(-1));
+   if(reduced()||document.hidden)return;
    if(blockedDir!==null)await bump(frames.at(-1),blockedDir);else if(success)await cheer(frames.at(-1));
+   if(mine===token)snap(frames.at(-1));
   },
   setZoom(value){zoom=value;game?.scale.setZoom(value);},
   sleep(){token++;game?.loop.sleep();},
