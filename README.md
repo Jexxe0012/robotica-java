@@ -1,4 +1,4 @@
-# Robótica Java · Lógica y POO
+# Las aventuras de Miaubit · Java, lógica y POO
 
 Aventura educativa en español con **90 misiones**, construida a partir de la primera versión Huerto Java. Se aprende a leer, predecir, ordenar, depurar y escribir código, con Miaubit en un entorno 2D pixel art y un inspector de variables, objetos, referencias y llamadas.
 
@@ -9,6 +9,8 @@ Aventura educativa en español con **90 misiones**, construida a partir de la pr
 El proyecto enseña Java, mientras que la aplicación web y el intérprete están implementados en JavaScript. Phaser 4 renderiza el tablero 2D; el intérprete Java sigue determinando los movimientos y el resultado de cada misión. Los ejercicios descargables se ejecutan con un JDK real. No requiere Minecraft ni un servidor de Minecraft.
 
 ## La expedición de Miaubit
+
+El juego comienza en **Las aventuras de Miaubit**, una pantalla de título inspirada en la portada del video del proyecto. Permite comenzar, continuar una misión pendiente, explorar los mundos y abrir la colección de **22 logros**. Los logros reconocen el avance real: primeras misiones, tipos de reto, regiones completadas, proyectos y las 20 misiones de POO. Las cuentas con progreso previo los reciben retroactivamente. Consulta el [modelo, los requisitos y la navegación de inicio y logros](docs/home-and-achievements.md).
 
 La interfaz presenta un camino de diez misiones por capítulo, ilustraciones pixel art y Miaubit como personaje del escenario. El mapa incluye las 90 misiones originales, permite explorar cualquier capítulo y marca las finalizaciones reales del usuario. La aventura utiliza los estados del intérprete para animar a los robots.
 
@@ -22,7 +24,7 @@ npm ci
 npm run dev
 ```
 
-Abrir `http://127.0.0.1:4173/`. El mapa también admite enlaces como `#map-6`, y una misión puede abrirse directamente con `#m51`. Escape o **Mapa de capítulos** vuelve al camino y pausa la ejecución. **Pausar**, **Continuar**, **Paso a paso** y **Reiniciar prueba** permiten observar los cambios. La opción **Coordenadas** muestra las posiciones sin recargar la escena.
+Abrir `http://127.0.0.1:4173/` para ver el inicio. `#home` abre la portada y `#logros` la colección. El mapa admite enlaces como `#map-6`, y una misión puede abrirse directamente con `#m51`. La marca de la cabecera vuelve al inicio. Escape o **Mapa de capítulos** vuelve al camino y pausa la ejecución. **Pausar**, **Continuar**, **Paso a paso** y **Reiniciar prueba** permiten observar los cambios. La opción **Coordenadas** muestra las posiciones sin recargar la escena.
 
 `web/journey.js` se ocupa del camino de capítulos, la navegación, el HUD y la lista de casillas accesible. La interfaz se conecta directamente con una única escena reutilizable en `web/adventure-scene.js`: carga las capas de la región, marca destinos y estaciones, y anima los objetos robot entre posiciones. Los personajes creados por Java conservan su identidad visual; los objetos que no son robots aparecen en el inspector. El tablero se puede inspeccionar con el ratón, el tacto o las flechas del teclado. El motor entrega instantáneas del estado después de cada instrucción; Phaser solo las presenta y nunca ejecuta Java. Un reinicio coloca a los personajes en el estado inicial. El movimiento reducido del sistema desactiva las animaciones. El inspector de POO se abre en los capítulos de objetos y diseño.
 
@@ -48,6 +50,7 @@ El cambio de capítulo prepara y decodifica el paisaje antes de mostrarlo, antic
 | Aventura visual | Phaser, `web/adventure-scene.js`, `web/campaign.js`, Tiled JSON y SVG | Nueve escenarios, historias, restauración por capítulo, personajes y HUD conectados a la traza |
 | Motor educativo | Analizador e intérprete propios en JavaScript | Interpretar el subconjunto de Java, verificar operaciones y generar estados de ejecución |
 | Contenido y evaluación | Datos y funciones en `web/lessons.js` | Definir las 90 misiones, sus estados iniciales, soluciones de referencia y objetivos |
+| Inicio y logros | `web/achievements.js`, `web/game-hub.js` y `web/game-hub.css` | Pantalla de título, continuación, colección y desbloqueos derivados de las finalizaciones reales |
 | Guía didáctica | Generador de explicaciones en `web/lessons.js`, renderizado en `web/app.js` | Explicar cada concepto con palabras simples, relacionarlo con la misión y definir los símbolos que aparecen en su código |
 | Exportación | Generador de código Java en `web/export.js` | Construir `Mision.java`, con las clases del alumno y la API del robot |
 | Servidor de producción | Worker con API Fetch | Servir los recursos web y atender `/api/progress` |
@@ -103,6 +106,7 @@ robotica-java/
 │   ├── check.mjs              # Misiones, semántica del motor y persistencia
 │   ├── java.mjs               # Compila y ejecuta las 90 exportaciones
 │   ├── adventure.mjs          # Nueve mapas, narración y progreso por capítulo
+│   ├── achievements.mjs       # Umbrales, regiones, POO y continuación
 │   └── assets.mjs             # Recursos binarios y respuestas HTTP del Worker
 └── web/
     ├── index.html             # Estructura y controles accesibles
@@ -114,6 +118,9 @@ robotica-java/
     ├── assets.js              # URLs versionadas en producción
     ├── landscapes.js          # Preparación, carga anticipada y reutilización de paisajes
     ├── campaign.js            # Historias, paletas y progreso de las nueve regiones
+    ├── achievements.js        # Catálogo y cálculo de los 22 logros
+    ├── game-hub.js            # Inicio, colección, filtros y avisos
+    ├── game-hub.css           # Portada y emblemas de fantasía retro
     ├── adventure-scene.js     # Escena Phaser, sprites y cámara
     ├── adventure-ui.js        # Historia, cuaderno y controles móviles
     ├── adventure-audio.js     # Sonidos opcionales sintetizados
