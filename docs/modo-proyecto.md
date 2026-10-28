@@ -51,9 +51,9 @@ mando.presionar("derecha", robot);
 mando.presionar("arriba", robot);
 ```
 
-El intérprete es determinista, así que la repetición reproduce exactamente el estado anterior y solo se anima el último tramo. Un prototipo con el intérprete actual midió unos 16 eventos por pulsación; con el límite de 1 200 pasos caben unas 70. Antes de alcanzarlo, el juego toma el estado del tablero como nuevo punto de partida. Un choque contra el borde o una roca se muestra como retroalimentación visual y la pulsación se descarta.
+El intérprete es determinista, así que la repetición reproduce exactamente el estado anterior y solo se anima el último tramo. Cada pulsación cuesta unos 17 pasos de traza; la energía de Miaubit (20) limita una partida a 20 movimientos, unos 350 pasos, lejos del límite de 1 200. **Reiniciar tablero** empieza otra partida. Un choque contra el borde o una roca se muestra como retroalimentación visual y la pulsación se descarta; quedarse sin energía se explica y pide reiniciar.
 
-Las instantáneas del intérprete incluyen los atributos de cada objeto. La escena dibuja el control con el color y la etiqueta que el jugador escribió en sus objetos `Boton`, y el marcador lee los objetos del jugador. Los límites del intérprete se mantienen: tablero de 6 × 5, energía 20, 80 objetos, 160 vueltas por bucle y 24 llamadas anidadas.
+Las instantáneas del intérprete incluyen los atributos de cada objeto. `MiaubitLevels.padLayout()` sigue la referencia `mando` hasta el objeto `Control`, toma sus atributos de tipo `Boton` y asigna cada uno a la flecha de su dirección (`norte` arriba, `sur` abajo, `este` derecha, `oeste` izquierda). Cada flecha se pinta con el color de su botón; el control conoce diez colores con nombre y avisa si recibe otro. Los límites del intérprete se mantienen: tablero de 6 × 5, energía 20, 80 objetos, 160 vueltas por bucle y 24 llamadas anidadas.
 
 ### Escena y arte
 
@@ -61,7 +61,7 @@ El modo tiene su propia escena Phaser en `web/proyectos/escena.js`; `web/adventu
 
 Miaubit camina con `web/proyectos/assets/miaubit-camina.png`, una hoja de 192 × 192 píxeles: cuatro filas (sur, norte, este y oeste) de cuatro cuadros de 48 píxeles. Mira hacia donde camina y, al detenerse, vuelve a la orientación que indica el intérprete; las direcciones absolutas no la cambian. La aventura conserva su hoja actual.
 
-Después de **Probar**, `MiaubitWorkshop.frames()` reduce la traza a los momentos en que cambian los robots o el tablero, y la escena los anima casilla por casilla. Si la ejecución termina contra un borde o una roca, `blocked()` deduce la dirección desde la línea del error y Miaubit choca en esa dirección. Con movimiento reducido, la escena salta al estado final.
+Después de **Probar**, `MiaubitWorkshop.frames()` reduce la traza a los momentos en que cambian los robots o el tablero, y la escena los anima casilla por casilla. Si la ejecución termina contra un borde o una roca, `blocked()` deduce la dirección desde la línea del error y Miaubit choca en esa dirección. Con movimiento reducido o la pestaña oculta, la escena salta al estado final; cada animación tiene además un tiempo máximo, para que la pantalla nunca quede esperando fotogramas que el navegador no dibuja.
 
 El generador se versiona en `tools/miaubit-arte/` sin cambios respecto de los originales; `exportar-proyectos.mjs` escribe la hoja del modo. Las pruebas comprueban que la hoja publicada es idéntica a la que dibuja el generador.
 
@@ -93,7 +93,7 @@ Construir desde cero un control virtual con el que el jugador mueve a Miaubit.
 | 2 · El plano del botón | `class Boton` con los atributos `direccion` y `color` y un constructor que usa `this` | m51, m52, m53, m26 |
 | 3 · Cada botón sabe moverse | `pulsar(Robot r)` con una condición `if` y `equals()` por dirección | m26, m41, m48 |
 | 4 · Arma el control | `Control implements Mando`, con cuatro botones privados y `presionar(String boton, Robot r)` | m57, m62, m65, m66, m90 |
-| 5 · Diseña y juega | Cambiar colores y etiquetas, contar pulsaciones y llevar a Miaubit a la meta con el control propio | m58, m68 |
+| 5 · Diseña y juega | Contar pulsaciones en un atributo `private int` con `getPulsaciones()`, usar al menos tres colores en los botones y llevar a Miaubit a la estrella con el control propio | m58, m68 |
 
 ### Proyecto 2 · La cosecha de cristales
 
@@ -127,10 +127,11 @@ Las actividades de cada nivel combinan tipos de reto: crear en el taller, escrib
 
 | Zona | Qué ofrece |
 | --- | --- |
-| Explorador | Nombre del proyecto, botones para crear carpetas y archivos dentro de la carpeta seleccionada y borrado con confirmación. Los nombres se validan mientras se escriben: carpetas en minúscula, archivos `Clase.java` con mayúscula, sin acentos, espacios ni repetidos, y sin usar `Robot` ni los archivos del juego. |
+| Explorador | Nombre del proyecto, botones para crear carpetas y archivos dentro de la carpeta seleccionada y borrado con confirmación. Los nombres se validan mientras se escriben: carpetas en minúscula, archivos `Clase.java` con mayúscula, sin acentos, espacios ni repetidos, y sin usar `Robot` ni los archivos del juego. Desde el nivel 4, la sección **Archivos del juego** muestra `juego/Mando.java`, que se abre en modo de solo lectura. |
 | Editor | Pestañas de archivos abiertos, colores de sintaxis, números de línea con los errores y avisos marcados, sangría automática y Tab para insertar espacios (Esc y después Tab sale del editor). **Probar** analiza y ejecuta; el resultado aparece en Problemas, Consola y Objetos, con los atributos de cada objeto creado. |
 | Objetivos | Miaubit comenta cada paso, los objetivos se marcan en vivo y las pistas se piden de una en una. Los objetivos que dependen de la ejecución esperan a **Probar**, y cualquier cambio en el código invalida la ejecución anterior. Cada nivel enlaza las misiones donde se aprendió lo que usa. |
 | Escenario | Sobre el editor: el tablero con Miaubit y la lista **Prueba del juego**. Cada prueba es una acción que el juego ejecuta al pulsar **Probar** (en el nivel 3, crear un botón y pulsarlo) y comprueba que Miaubit se mueva exactamente lo esperado desde donde lo dejó la anterior, así un error no oculta los demás. La lista indica de dónde a dónde se movió Miaubit, y **Repetir animación** vuelve a mostrarla. Los objetivos se revelan cuando termina la animación. |
+| Control | En los niveles 4 y 5, una cruceta dibujada desde los objetos `Boton` del jugador. Se enciende cuando **Probar** crea el control sin errores; cada flecha, con el ratón o las flechas del teclado, llama a `mando.presionar(...)` y anima a Miaubit. Muestra las pulsaciones del juego y, si existe, el contador `int` del jugador para compararlos. Editar el código apaga el control hasta el siguiente **Probar**. |
 
 Al cumplir todos los objetivos se celebra el nivel y el código pasa al siguiente. Cada nivel define sus objetivos como funciones sobre los archivos y, si hace falta, sobre la última ejecución; un objetivo puede explicar por qué falla con los términos de su misión, por ejemplo los atributos en `null` sin `this` (m53).
 
@@ -163,6 +164,9 @@ Quedan para después: el guardado por usuario y una historia que conecte los tre
 - El avance guardado en el navegador se sanea antes de usarse, y el resaltado de sintaxis escapa el código.
 - Las pruebas del nivel 3 distinguen movimientos correctos, cruzados, ausentes y choques, y explican cada caso; los fotogramas de la escena y la dirección de un choque se calculan sin navegador.
 - La hoja de caminata publicada es idéntica a la que dibuja `tools/miaubit-arte/`, mide 192 × 192 y se empaqueta como `image/png`.
+- `Mando.java` es del juego: queda reservado, se une primero y no forma parte de los archivos del jugador. Las flechas del nivel 4 detectan la interfaz ausente, flechas cruzadas o sin movimiento.
+- El control toma cada flecha del `Boton` con su dirección y avisa de colores desconocidos o faltantes. La repetición de pulsaciones es determinista, 20 pulsaciones caben en la energía y la siguiente se detiene; la ruta de referencia llega a la estrella y una ruta incompleta no.
+- El nivel 5 explica un contador que no suma, la falta de `getPulsaciones()` y un diseño con menos de tres colores, y solo se completa al llegar jugando.
 - Cada nivel cita misiones existentes y su código no contiene construcciones excluidas (`else if`, `switch`, `package`, `import`).
 - La repetición de pulsaciones reproduce el mismo estado.
 - Los proyectos, niveles y misiones citadas coinciden con las tablas de este documento.
