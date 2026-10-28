@@ -22,12 +22,12 @@ Las únicas ideas nuevas pertenecen al taller y no son sintaxis Java: un proyect
 | Pieza | Ubicación | Responsabilidad |
 | --- | --- | --- |
 | Página | `web/proyectos.html` | Entrada independiente; no forma parte de `journey.js` ni de sus rutas |
-| Código y estilos | `web/proyectos/` | Taller, ejecución, escena, datos de los proyectos y estilos propios |
+| Código y estilos | `web/proyectos/` | `catalogo.js` (proyectos, niveles y reglas de desbloqueo, sin DOM), `pagina.js` (pantalla del taller) y `proyectos.css`; después, taller, ejecución y escena |
 | Imágenes | `web/proyectos/assets/` | Hoja de caminata de Miaubit y recursos del modo |
 | Generador de arte | `tools/miaubit-arte/` | Script que produce las imágenes de Miaubit, versionado con el juego |
 | Pruebas | `tests/projects.mjs` | Desbloqueo, ejecución, niveles y regla de conceptos |
 
-El build y el servidor local ya publican cualquier archivo dentro de `web/`, incluidas sus subcarpetas, así que no requieren cambios.
+El build y el servidor local ya publican cualquier archivo dentro de `web/`, incluidas sus subcarpetas, así que no requieren cambios. El servidor local detecta los archivos al iniciar: después de crear uno nuevo hay que reiniciar `npm run dev`.
 
 ### Ejecución sin modificar el intérprete
 
@@ -65,7 +65,7 @@ El modo tiene su propia escena Phaser; `web/adventure-scene.js` no se toca. Miau
 | `.gitignore` | Excepción para `web/proyectos/assets/*.png` | Hoy se ignoran los PNG fuera de `web/assets/` |
 | `README.md` | Un párrafo con enlace a este documento | Documentar el modo |
 
-No se modifican `engine.js`, `lessons.js`, `campaign.js`, `adventure-*.js`, `journey.js`, `app.js`, `game-hub.js`, `achievements.js`, `worlds.js`, `export.js`, `server/`, `db/`, `drizzle/` ni los estilos de la aventura. El modo depende, solo para leer, de `RobotJava.execute`, `SiteAssets.url`, Phaser, la fuente Pixelify Sans y `GET /api/progress`. Si alguno de esos contratos cambia, `tests/projects.mjs` falla y avisa antes de integrar.
+No se modifican `engine.js`, `lessons.js`, `campaign.js`, `adventure-*.js`, `journey.js`, `app.js`, `game-hub.js`, `achievements.js`, `worlds.js`, `export.js`, `server/`, `db/`, `drizzle/` ni los estilos de la aventura. El modo depende, solo para leer, de `RobotJava.execute`, `SiteAssets.url`, `AtlasWorlds` (nombres y colores de las regiones), Phaser, la fuente Pixelify Sans, el retrato `assets/atlas-crt.png` y `GET /api/progress`. Si alguno de esos contratos cambia, `tests/projects.mjs` falla y avisa antes de integrar.
 
 Las imágenes del modo no van en `web/assets/`, porque `tests/assets.mjs` exige que cada archivo de esa carpeta se use desde la página de la aventura.
 
@@ -136,10 +136,14 @@ Quedan para después: el guardado por usuario y una historia que conecte los tre
 - La solución de referencia de cada nivel cumple su objetivo, y el código inicial no lo cumple.
 - Cada nivel cita misiones existentes y su código no contiene construcciones excluidas (`else if`, `switch`, `package`, `import`).
 - La repetición de pulsaciones reproduce el mismo estado.
+- Los proyectos, niveles y misiones citadas coinciden con las tablas de este documento.
+- La página se empaqueta con URLs versionadas, carga todos los archivos del modo y el inicio tiene un único enlace a ella.
+- Solo `127.0.0.1`, `localhost` y `[::1]` permiten abrir el taller antes de tiempo, y la pantalla lo indica.
 
-Las pruebas actuales de la aventura se siguen ejecutando sin cambios:
+Comandos de verificación; las pruebas de la aventura se ejecutan sin cambios:
 
 ```sh
+npm run test:projects
 npm test
 npm run test:adventure
 npm run test:achievements
