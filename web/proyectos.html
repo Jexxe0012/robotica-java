@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modo Proyecto · Las aventuras de Miaubit</title><meta name="description" content="Construye proyectos completos en Java con Miaubit usando todo lo que aprendiste en las 90 misiones.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080d10'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='22' fill='%236dbb91'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="proyectos/proyectos.css">
+<script src="assets.js" defer></script>
+<script src="worlds.js" defer></script>
+<script src="proyectos/catalogo.js" defer></script>
+<script src="proyectos/pagina.js" defer></script>
+</head><body>
+<a class="skip-link" href="#workshop-title">Saltar al taller</a>
+<header class="bar"><a class="brand" href="./#home" aria-label="Las aventuras de Miaubit · Inicio"><span class="brand-mark" aria-hidden="true">{ }</span><span>ROBÓTICA <strong>JAVA</strong><small>MODO PROYECTO</small></span></a><a class="button subtle" href="./#home">← Volver a la aventura</a></header>
+<main class="wrap">
+ <section class="hero" aria-labelledby="workshop-title">
+  <div class="hero-copy">
+   <p class="eyebrow">TALLER DE MIAUBIT</p>
+   <h1 id="workshop-title" tabindex="-1"><span>Modo</span><strong>PROYECTO</strong></h1>
+   <p class="hero-lead">Ya sabes leer, ordenar, corregir y escribir Java. Aquí lo juntas todo: creas el proyecto, sus archivos y sus clases, y ves a Miaubit obedecer tu código.</p>
+   <ul id="hero-stats" class="hero-stats"></ul>
+  </div>
+  <figure class="bench" aria-hidden="true">
+   <span class="bench-tag">MIAUBIT · INGENIERO</span>
+   <svg class="gear gear-big" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="4.71 4.71"/><circle cx="16" cy="16" r="9.5" fill="currentColor"/><circle cx="16" cy="16" r="3.5" class="gear-hole"/></svg>
+   <svg class="gear gear-small" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="4.71 4.71"/><circle cx="16" cy="16" r="9.5" fill="currentColor"/><circle cx="16" cy="16" r="3.5" class="gear-hole"/></svg>
+   <img class="bench-cat" src="assets/atlas-crt.png" alt="" width="1152" height="1152" decoding="async">
+   <pre class="bench-code"><span class="k">class</span> <span class="t">Control</span> <span class="k">implements</span> <span class="t">Mando</span> {
+  <span class="k">public void</span> presionar(<span class="t">String</span> b, <span class="t">Robot</span> r) {
+    <span class="k">if</span> (b.equals(<span class="s">"arriba"</span>)) { r.norte(); }
+  }
+}</pre>
+  </figure>
+ </section>
+ <section id="gate" class="gate" data-state="loading" aria-labelledby="gate-title" aria-busy="true">
+  <div class="gate-copy">
+   <p id="gate-label" class="gate-label">BITÁCORA DE LA EXPEDICIÓN</p>
+   <h2 id="gate-title">Revisando tu avance…</h2>
+   <p id="gate-text" class="gate-text">Leemos las misiones que completaste en la aventura.</p>
+   <div class="gate-actions">
+    <a id="gate-continue" class="button primary" href="./#home" hidden>Continuar la aventura</a>
+    <button id="gate-retry" class="button secondary" type="button" hidden>Reintentar</button>
+    <button id="gate-dev" class="button dev" type="button" hidden>Abrir sin las 90 misiones · solo local</button>
+   </div>
+  </div>
+  <div class="gate-meter">
+   <p class="gate-count"><strong id="gate-done">–</strong><span>/ 90 misiones</span></p>
+   <ul id="gate-regions" class="gate-regions" aria-label="Avance por región"></ul>
+  </div>
+  <p id="gate-status" class="visually-hidden" role="status"></p>
+ </section>
+ <section class="projects" aria-labelledby="projects-title">
+  <div class="section-head"><div><p class="eyebrow">TRES PROYECTOS</p><h2 id="projects-title">Del plano al juego</h2></div><p>Cada proyecto se abre al terminar el anterior. Cada nivel indica las misiones donde aprendiste lo que vas a usar: aquí no aparece Java nuevo.</p></div>
+  <div id="project-list" class="project-list"></div>
+ </section>
+</main>
+<footer class="foot"><p>Created by Josue Sandoval // Diego Fuentes</p></footer>
+</body></html>
