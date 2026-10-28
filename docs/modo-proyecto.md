@@ -22,7 +22,9 @@ Las únicas ideas nuevas pertenecen al taller y no son sintaxis Java: un proyect
 | Pieza | Ubicación | Responsabilidad |
 | --- | --- | --- |
 | Página | `web/proyectos.html` | Entrada independiente; no forma parte de `journey.js` ni de sus rutas |
-| Código y estilos | `web/proyectos/` | `catalogo.js` (proyectos, niveles y reglas de desbloqueo, sin DOM), `pagina.js` (pantalla del taller) y `proyectos.css`; después, taller, ejecución y escena |
+| Datos y reglas | `web/proyectos/catalogo.js`, `espacio.js`, `niveles.js` | Sin DOM y probados en Node: catálogo y desbloqueo; carpetas, archivos, reglas de Java, unión y ejecución; niveles jugables, evaluación y progreso guardado |
+| Pantallas | `web/proyectos/pagina.js`, `taller.js` | Entrada, candado y tarjetas; el taller con explorador, editor, resultado y objetivos |
+| Estilos | `web/proyectos/proyectos.css`, `taller.css` | Portada del modo y taller |
 | Imágenes | `web/proyectos/assets/` | Hoja de caminata de Miaubit y recursos del modo |
 | Generador de arte | `tools/miaubit-arte/` | Script que produce las imágenes de Miaubit, versionado con el juego |
 | Pruebas | `tests/projects.mjs` | Desbloqueo, ejecución, niveles y regla de conceptos |
@@ -32,6 +34,8 @@ El build y el servidor local ya publican cualquier archivo dentro de `web/`, inc
 ### Ejecución sin modificar el intérprete
 
 El Modo Proyecto usa `RobotJava.execute(source, initial)` tal como existe. El taller une los archivos del jugador en un único programa, recuerda la línea donde empieza cada archivo y agrega al final las instrucciones del juego. Un error del intérprete se traduce de vuelta a su archivo y línea; por ejemplo, la línea 7 del programa unido se informa como `Boton.java`, línea 7.
+
+Antes de ejecutar, cada archivo se analiza por separado con `RobotJava.Parser`, como si se compilara: debe contener una sola clase o interfaz con el nombre del archivo y ninguna instrucción suelta. Si hay errores, el programa no se ejecuta. Las construcciones excluidas (`else if`, `switch`, `import`, `package`) se señalan como avisos con la alternativa que enseñan las misiones. Un error dentro de la prueba del juego se explica mostrando la instrucción que el juego ejecutó.
 
 El juego entrega archivos de solo lectura, igual que la aventura entrega `Robot`. El primero es un contrato que el jugador implementa, con la misma forma que `Tarea` en m65 y m66:
 
@@ -111,6 +115,20 @@ Diseñar una arquitectura con polimorfismo: Luna patrulla sola mientras Miaubit 
 
 Las actividades de cada nivel combinan tipos de reto: crear en el taller, escribir o completar una clase, corregir un error y probar en el escenario. La retroalimentación es inmediata: mensajes del intérprete con su archivo y línea, el objeto afectado resaltado y el resultado visible en el tablero.
 
+## El taller
+
+`proyectos.html#taller-control` abre el taller de un proyecto disponible; sin las 90 misiones, el enlace vuelve a la lista. La pantalla tiene tres zonas:
+
+| Zona | Qué ofrece |
+| --- | --- |
+| Explorador | Nombre del proyecto, botones para crear carpetas y archivos dentro de la carpeta seleccionada y borrado con confirmación. Los nombres se validan mientras se escriben: carpetas en minúscula, archivos `Clase.java` con mayúscula, sin acentos, espacios ni repetidos, y sin usar `Robot` ni los archivos del juego. |
+| Editor | Pestañas de archivos abiertos, colores de sintaxis, números de línea con los errores y avisos marcados, sangría automática y Tab para insertar espacios (Esc y después Tab sale del editor). **Probar** analiza y ejecuta; el resultado aparece en Problemas, Consola y Objetos, con los atributos de cada objeto creado. |
+| Objetivos | Miaubit comenta cada paso, los objetivos se marcan en vivo y las pistas se piden de una en una. Los objetivos que dependen de la ejecución esperan a **Probar**, y cualquier cambio en el código invalida la ejecución anterior. Cada nivel enlaza las misiones donde se aprendió lo que usa. |
+
+Al cumplir todos los objetivos se celebra el nivel y el código pasa al siguiente. Cada nivel define sus objetivos como funciones sobre los archivos y, si hace falta, sobre la última ejecución; un objetivo puede explicar por qué falla con los términos de su misión, por ejemplo los atributos en `null` sin `this` (m53).
+
+El avance se guarda en `localStorage`, con la clave `miaubit-proyectos-v1`: nombre, carpetas y archivos de cada proyecto, nivel actual y niveles terminados. Al leerlo se descarta cualquier ruta, nombre o tamaño inesperado. Si el navegador no permite guardar, el taller sigue funcionando y lo avisa.
+
 ## Etapas de desarrollo
 
 Cada etapa termina en un pull request de `diego` hacia `main`, con todas las pruebas en verde.
@@ -119,9 +137,9 @@ Cada etapa termina en un pull request de `diego` hacia `main`, con todas las pru
 | --- | --- |
 | 0 · Diseño | Este documento |
 | 1 · Entrada y candado | Página, enlace en el inicio, pantalla de bloqueo, tarjetas de los tres proyectos y pruebas en CI |
-| 2 · Taller | Árbol de archivos, editor, unión de archivos, errores por archivo y línea, avance en el navegador |
+| 2 · Taller | Explorador, editor, unión de archivos, errores por archivo y línea, avance en el navegador y los niveles 1 y 2 del Proyecto 1, que no necesitan escenario |
 | 3 · Escena y arte | Escena Phaser propia, caminata de Miaubit, control dibujado desde los objetos y generador en `tools/miaubit-arte/` |
-| 4 · Proyecto 1 | Sus cinco niveles completos |
+| 4 · Proyecto 1 | Niveles 3 a 5, que usan el escenario y el control |
 | 5 · Proyecto 2 | Sus cinco niveles completos |
 | 6 · Proyecto 3 | Sus cinco niveles completos |
 
@@ -129,11 +147,13 @@ Quedan para después: el guardado por usuario y una historia que conecte los tre
 
 ## Verificación
 
-`tests/projects.mjs` comprobará, sin navegador:
+`tests/projects.mjs` comprueba, sin navegador:
 
 - El desbloqueo exige las 90 misiones reales e ignora identificadores desconocidos o repetidos.
-- La unión de archivos y la ubicación de errores por archivo y línea.
-- La solución de referencia de cada nivel cumple su objetivo, y el código inicial no lo cumple.
+- La unión de archivos y la ubicación de errores por archivo y línea, dentro de los archivos o en la prueba del juego.
+- Los nombres de carpetas y archivos, la regla de una clase por archivo y los avisos de construcciones excluidas.
+- Cada nivel jugable empieza sin completar con los archivos del nivel anterior, y su solución de referencia cumple todos los objetivos sin avisos.
+- El avance guardado en el navegador se sanea antes de usarse, y el resaltado de sintaxis escapa el código.
 - Cada nivel cita misiones existentes y su código no contiene construcciones excluidas (`else if`, `switch`, `package`, `import`).
 - La repetición de pulsaciones reproduce el mismo estado.
 - Los proyectos, niveles y misiones citadas coinciden con las tablas de este documento.
