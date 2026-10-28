@@ -4,14 +4,19 @@
 <title>Modo Proyecto · Las aventuras de Miaubit</title><meta name="description" content="Construye proyectos completos en Java con Miaubit usando todo lo que aprendiste en las 90 misiones.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080d10'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='22' fill='%236dbb91'%3E%7B%7D%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="proyectos/proyectos.css">
+<link rel="stylesheet" href="proyectos/taller.css">
 <script src="assets.js" defer></script>
 <script src="worlds.js" defer></script>
+<script src="engine.js" defer></script>
 <script src="proyectos/catalogo.js" defer></script>
+<script src="proyectos/espacio.js" defer></script>
+<script src="proyectos/niveles.js" defer></script>
+<script src="proyectos/taller.js" defer></script>
 <script src="proyectos/pagina.js" defer></script>
 </head><body>
 <a class="skip-link" href="#workshop-title">Saltar al taller</a>
 <header class="bar"><a class="brand" href="./#home" aria-label="Las aventuras de Miaubit · Inicio"><span class="brand-mark" aria-hidden="true">{ }</span><span>ROBÓTICA <strong>JAVA</strong><small>MODO PROYECTO</small></span></a><a class="button subtle" href="./#home">← Volver a la aventura</a></header>
-<main class="wrap">
+<main id="inicio" class="wrap">
  <section class="hero" aria-labelledby="workshop-title">
   <div class="hero-copy">
    <p class="eyebrow">TALLER DE MIAUBIT</p>
@@ -52,6 +57,67 @@
   <div class="section-head"><div><p class="eyebrow">TRES PROYECTOS</p><h2 id="projects-title">Del plano al juego</h2></div><p>Cada proyecto se abre al terminar el anterior. Cada nivel indica las misiones donde aprendiste lo que vas a usar: aquí no aparece Java nuevo.</p></div>
   <div id="project-list" class="project-list"></div>
  </section>
+</main>
+<main id="taller" class="taller" aria-labelledby="taller-title" hidden>
+ <header class="taller-top">
+  <a class="button subtle" href="#">← Proyectos</a>
+  <div class="taller-heading"><p id="taller-kicker" class="taller-kicker"></p><h1 id="taller-title" tabindex="-1"></h1></div>
+  <ol id="taller-pips" class="taller-pips" aria-label="Niveles del proyecto"></ol>
+ </header>
+ <div id="taller-grid" class="taller-grid">
+  <aside class="explorer" aria-labelledby="explorer-title">
+   <h2 id="explorer-title" class="panel-title">Explorador</h2>
+   <label class="project-name" for="project-name">Nombre del proyecto</label>
+   <input id="project-name" class="field" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Por ejemplo: Control de Miaubit">
+   <p id="project-name-error" class="field-error" role="alert"></p>
+   <div class="explorer-actions"><button id="new-folder" class="tool" type="button">＋ Carpeta</button><button id="new-file" class="tool" type="button">＋ Archivo</button></div>
+   <form id="create-form" class="create-form" hidden>
+    <label id="create-label" for="create-name"></label>
+    <p id="create-where" class="create-where"></p>
+    <div class="create-row"><input id="create-name" class="field" autocomplete="off" spellcheck="false"><button class="tool primary" type="submit">Crear</button><button id="create-cancel" class="tool" type="button" aria-label="Cancelar">✕</button></div>
+    <p id="create-error" class="field-error" role="alert"></p>
+   </form>
+   <ul id="tree" class="tree" aria-label="Archivos del proyecto"></ul>
+   <button id="reset-project" class="text-tool" type="button">Empezar el proyecto de nuevo</button>
+  </aside>
+  <section class="workbench" aria-label="Editor">
+   <div id="tabs" class="tabs" role="tablist" aria-label="Archivos abiertos"></div>
+   <div id="editor" class="editor">
+    <ol id="gutter" class="gutter" aria-hidden="true"></ol>
+    <div class="code-layer"><pre id="highlight" class="highlight" aria-hidden="true"></pre><textarea id="code" class="code" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Código del archivo" aria-describedby="editor-help"></textarea></div>
+    <p id="editor-empty" class="editor-empty">Abre o crea un archivo .java para escribir código.</p>
+   </div>
+   <p id="editor-help" class="editor-help">Tab inserta espacios. Pulsa Esc y después Tab para salir del editor.</p>
+   <div class="run-bar"><button id="run" class="button primary" type="button">▶ Probar</button><p id="run-status" class="run-status" role="status"></p></div>
+   <div class="output">
+    <div class="output-tabs" role="tablist" aria-label="Resultado">
+     <button id="tab-problems" role="tab" aria-selected="true" aria-controls="out-problems" type="button">Problemas <span id="problem-count" class="count">0</span></button>
+     <button id="tab-console" role="tab" aria-selected="false" aria-controls="out-console" type="button">Consola</button>
+     <button id="tab-objects" role="tab" aria-selected="false" aria-controls="out-objects" type="button">Objetos</button>
+    </div>
+    <div id="out-problems" class="out-panel" role="tabpanel" aria-labelledby="tab-problems"><ul id="problems" class="problems"></ul></div>
+    <div id="out-console" class="out-panel" role="tabpanel" aria-labelledby="tab-console" hidden><pre id="console" class="console"></pre></div>
+    <div id="out-objects" class="out-panel" role="tabpanel" aria-labelledby="tab-objects" hidden><div id="objects" class="objects"></div></div>
+   </div>
+  </section>
+  <aside class="mission" aria-labelledby="mission-title">
+   <div class="assistant"><img src="assets/atlas-crt.png" alt="" width="1152" height="1152" decoding="async"><p id="assistant" class="bubble" role="status" aria-live="polite"></p></div>
+   <h2 id="mission-title" class="panel-title">Objetivos</h2>
+   <ul id="tasks" class="tasks"></ul>
+   <button id="hint" class="tool" type="button">Pedir una pista</button>
+   <p id="learned" class="learned"></p>
+   <p id="saved" class="saved"></p>
+  </aside>
+ </div>
+ <div id="level-done" class="level-done" role="dialog" aria-modal="true" aria-labelledby="level-done-title" hidden>
+  <div class="level-card">
+   <div class="confetti" aria-hidden="true"></div>
+   <p id="level-done-kicker" class="taller-kicker"></p>
+   <h2 id="level-done-title"></h2>
+   <p id="level-done-text"></p>
+   <div class="level-actions"><button id="level-next" class="button primary" type="button"></button><button id="level-stay" class="button subtle" type="button">Seguir en el taller</button></div>
+  </div>
+ </div>
 </main>
 <footer class="foot"><p>Created by Josue Sandoval // Diego Fuentes</p></footer>
 </body></html>
