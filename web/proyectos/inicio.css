@@ -1,0 +1,4 @@
+/* The project mode button on the title screen. game-hub.css already gives every .home-menu > .primary the
+   adventure button's look; this file only adds the same arrow and the gap between the two main buttons. */
+#home-projects{margin-top:12px}
+#home-projects::before{content:'';width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid currentColor;margin-right:8px}

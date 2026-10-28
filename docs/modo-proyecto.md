@@ -69,7 +69,7 @@ El generador se versiona en `tools/miaubit-arte/` sin cambios respecto de los or
 
 | Archivo | Cambio | Motivo |
 | --- | --- | --- |
-| `web/index.html` | Un enlace **Modo proyecto** en el menú de inicio | Única puerta de entrada desde la aventura |
+| `web/index.html` | Un enlace **Modo proyecto** en el menú de inicio, con la misma clase `primary` que el botón de la aventura, y la hoja `proyectos/inicio.css`, que solo le agrega la flecha y la separación | Única puerta de entrada desde la aventura, con el mismo peso visual que **Comenzar aventura** |
 | `package.json` | Script `test:projects` | Ejecutar las pruebas del modo |
 | `.github/workflows/ci.yml` | Un paso con `npm run test:projects` | Validar el modo en cada pull request |
 | `.gitignore` | Excepción para `web/proyectos/assets/*.png` | Hoy se ignoran los PNG fuera de `web/assets/` |

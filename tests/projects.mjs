@@ -252,7 +252,9 @@ assert.deepEqual([...Levels.finished(Levels.restore({projects:{control:{workspac
 
 // The page loads every file of the mode; the adventure only gains one link to it.
 const page=await readFile('web/proyectos.html','utf8'),home=await readFile('web/index.html','utf8');
-for(const file of (await readdir('web/proyectos')).filter(name=>/\.(css|js)$/.test(name)))assert(page.includes(`"proyectos/${file}"`),file+' is referenced by proyectos.html');
+// inicio.css styles the project mode button on the title screen, so the adventure page is the one that loads it.
+for(const file of (await readdir('web/proyectos')).filter(name=>/\.(css|js)$/.test(name)))assert((file==='inicio.css'?home:page).includes(`"proyectos/${file}"`),file+' is referenced by its page');
+assert(home.includes('<a id="home-projects" class="button primary" href="proyectos.html">'),'the project mode button looks like the adventure button');
 for(const dependency of ['assets.js','worlds.js','engine.js'])assert(page.includes(`"${dependency}"`),dependency);
 assert(page.includes('src="assets/atlas-crt.png"'));
 assert.equal(home.match(/href="proyectos\.html"/g)?.length,1);
