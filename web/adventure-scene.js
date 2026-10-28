@@ -15,6 +15,11 @@
    this.cellLabels=Array.from({length:30},(_,i)=>{const x=i%6,y=Math.floor(i/6);return this.add.text(OX+x*TILE+3,OY+y*TILE+3,`(${x},${y})`,cellStyle).setDepth(11).setVisible(false);});
    this.zoneLabel=this.add.text(OX,OY-22,'COORDENADAS (X,Y) · X → · Y ↓',{fontFamily:'Pixelify Sans, monospace',fontSize:'13px',color:'#b2c899',backgroundColor:'#14291e',padding:{x:5,y:3}}).setDepth(1).setVisible(false);
    this.scale.on('resize',()=>this.configureCamera());
+   // Phaser polls its parent size; the camera button changes this element's
+   // aspect ratio without resizing the window, so refresh before the next paint.
+   this.hostObserver=new ResizeObserver(()=>{if(!host.hidden&&this.scale.getParentBounds())this.scale.refresh();});
+   this.hostObserver.observe(host);
+   this.events.once('shutdown',()=>this.hostObserver.disconnect());
    document.getElementById('show-coordinates').addEventListener('change',()=>this.drawFocus());
    this.input.on('pointermove',p=>{const cell=this.cellAt(p.x,p.y);if(cell&&(cell.x!==this.focused?.x||cell.y!==this.focused?.y)){this.focused=cell;this.drawFocus();}});
    this.input.on('pointerdown',p=>{const cell=this.cellAt(p.x,p.y);if(cell)this.inspect(cell.x,cell.y);else {const point=this.cameras.main.getWorldPoint(p.x,p.y);if(progress.complete&&point.x>700&&Math.abs(point.y-288)<64)this.continueRegion();}});
