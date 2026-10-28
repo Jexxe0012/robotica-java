@@ -11,10 +11,9 @@
   create(){
    this.forest=this.add.graphics().setDepth(-1);this.props=this.add.graphics().setDepth(0);this.items=this.add.graphics().setDepth(2);this.focus=this.add.graphics().setDepth(9);
    this.coordinateText=this.add.text(OX+5,OY+5,'',{fontFamily:'monospace',fontSize:'11px',color:'#f0d394',backgroundColor:'#0b1714',padding:{x:4,y:3}}).setDepth(10);
-   const axisStyle={fontFamily:'monospace',fontSize:'15px',fontStyle:'bold',color:'#ffe4a0',backgroundColor:'#0b1714',padding:{x:4,y:2}};
-   this.axisLabels=[...Array.from({length:6},(_,x)=>this.add.text(OX+(x+.5)*TILE,OY+5*TILE+5,String(x),axisStyle).setOrigin(.5,0)),...Array.from({length:5},(_,y)=>this.add.text(OX-6,OY+(y+.5)*TILE,String(y),axisStyle).setOrigin(1,.5))];
-   this.axisLabels.forEach(label=>label.setDepth(10).setVisible(false));
-   this.zoneLabel=this.add.text(OX,OY-22,'ÁREA DE PROGRAMACIÓN · X → · Y ↓',{fontFamily:'Pixelify Sans, monospace',fontSize:'13px',color:'#b2c899',backgroundColor:'#14291e',padding:{x:5,y:3}}).setDepth(1).setVisible(false);
+   const cellStyle={fontFamily:'monospace',fontSize:'14px',fontStyle:'bold',color:'#ffe4a0',backgroundColor:'#0b1714',padding:{x:2,y:1}};
+   this.cellLabels=Array.from({length:30},(_,i)=>{const x=i%6,y=Math.floor(i/6);return this.add.text(OX+x*TILE+3,OY+y*TILE+3,`(${x},${y})`,cellStyle).setDepth(11).setVisible(false);});
+   this.zoneLabel=this.add.text(OX,OY-22,'COORDENADAS (X,Y) · X → · Y ↓',{fontFamily:'Pixelify Sans, monospace',fontSize:'13px',color:'#b2c899',backgroundColor:'#14291e',padding:{x:5,y:3}}).setDepth(1).setVisible(false);
    this.scale.on('resize',()=>this.configureCamera());
    document.getElementById('show-coordinates').addEventListener('change',()=>this.drawFocus());
    this.input.on('pointermove',p=>{const cell=this.cellAt(p.x,p.y);if(cell&&(cell.x!==this.focused?.x||cell.y!==this.focused?.y)){this.focused=cell;this.drawFocus();}});
@@ -133,8 +132,8 @@
    for(const [key,label] of this.boxLabels)if(!live.has(key)){label.destroy();this.boxLabels.delete(key);}
   }
   drawFocus(){
-   if(!this.focus)return;this.focus.clear();const enabled=document.getElementById('show-coordinates').checked;this.zoneLabel.setVisible(enabled);this.axisLabels.forEach(label=>label.setVisible(enabled));
-   this.coordinateText.setVisible(enabled||!!this.focused);
+   if(!this.focus)return;this.focus.clear();const enabled=document.getElementById('show-coordinates').checked;this.zoneLabel.setVisible(enabled);this.cellLabels.forEach(label=>label.setVisible(enabled));
+   this.coordinateText.setVisible(!enabled&&!!this.focused);
    if(enabled){this.focus.lineStyle(1,0x9db996,.35);for(let x=0;x<=6;x++)this.focus.lineBetween(OX+x*TILE,OY,OX+x*TILE,OY+5*TILE);for(let y=0;y<=5;y++)this.focus.lineBetween(OX,OY+y*TILE,OX+6*TILE,OY+y*TILE);}
    if(this.focused){const {x,y}=this.focused;this.focus.lineStyle(3,0xf0c564);this.focus.strokeRect(OX+x*TILE+2,OY+y*TILE+2,TILE-4,TILE-4);this.coordinateText.setText(`(${x}, ${y})`).setPosition(OX+x*TILE+3,OY+y*TILE+3);}
    else this.coordinateText.setText('Origen (0, 0)').setPosition(OX+3,OY+3);
