@@ -23,10 +23,10 @@ Las únicas ideas nuevas pertenecen al taller y no son sintaxis Java: un proyect
 | --- | --- | --- |
 | Página | `web/proyectos.html` | Entrada independiente; no forma parte de `journey.js` ni de sus rutas |
 | Datos y reglas | `web/proyectos/catalogo.js`, `espacio.js`, `niveles.js` | Sin DOM y probados en Node: catálogo y desbloqueo; carpetas, archivos, reglas de Java, unión y ejecución; niveles jugables, evaluación y progreso guardado |
-| Pantallas | `web/proyectos/pagina.js`, `taller.js` | Entrada, candado y tarjetas; el taller con explorador, editor, resultado y objetivos |
+| Pantallas | `web/proyectos/pagina.js`, `taller.js`, `escena.js` | Entrada, candado y tarjetas; el taller con explorador, editor, resultado y objetivos; el escenario Phaser |
 | Estilos | `web/proyectos/proyectos.css`, `taller.css` | Portada del modo y taller |
-| Imágenes | `web/proyectos/assets/` | Hoja de caminata de Miaubit y recursos del modo |
-| Generador de arte | `tools/miaubit-arte/` | Script que produce las imágenes de Miaubit, versionado con el juego |
+| Imágenes | `web/proyectos/assets/` | `miaubit-camina.png`, la hoja de caminata de Miaubit |
+| Generador de arte | `tools/miaubit-arte/` | Scripts que dibujan a Miaubit; reproducen exactamente los sprites de la aventura y la hoja del modo |
 | Pruebas | `tests/projects.mjs` | Desbloqueo, ejecución, niveles y regla de conceptos |
 
 El build y el servidor local ya publican cualquier archivo dentro de `web/`, incluidas sus subcarpetas, así que no requieren cambios. El servidor local detecta los archivos al iniciar: después de crear uno nuevo hay que reiniciar `npm run dev`.
@@ -57,7 +57,13 @@ Las instantáneas del intérprete incluyen los atributos de cada objeto. La esce
 
 ### Escena y arte
 
-El modo tiene su propia escena Phaser; `web/adventure-scene.js` no se toca. Miaubit camina con la hoja de 192 × 192 píxeles generada en `miaubit-arte`: cuatro filas (sur, norte, este y oeste) de cuatro cuadros de 48 píxeles, escalados con `pixelArt`. La aventura conserva su hoja actual.
+El modo tiene su propia escena Phaser en `web/proyectos/escena.js`; `web/adventure-scene.js` no se toca. Phaser se descarga la primera vez que un nivel necesita el escenario, así que la entrada y los niveles sin tablero no lo cargan. La escena dibuja el tablero de 6 × 5 casillas de 48 píxeles con las cajas, rocas, destinos y estaciones del estado inicial del nivel, sin escalar a fracciones: se amplía al doble solo cuando cabe.
+
+Miaubit camina con `web/proyectos/assets/miaubit-camina.png`, una hoja de 192 × 192 píxeles: cuatro filas (sur, norte, este y oeste) de cuatro cuadros de 48 píxeles. Mira hacia donde camina y, al detenerse, vuelve a la orientación que indica el intérprete; las direcciones absolutas no la cambian. La aventura conserva su hoja actual.
+
+Después de **Probar**, `MiaubitWorkshop.frames()` reduce la traza a los momentos en que cambian los robots o el tablero, y la escena los anima casilla por casilla. Si la ejecución termina contra un borde o una roca, `blocked()` deduce la dirección desde la línea del error y Miaubit choca en esa dirección. Con movimiento reducido, la escena salta al estado final.
+
+El generador se versiona en `tools/miaubit-arte/` sin cambios respecto de los originales; `exportar-proyectos.mjs` escribe la hoja del modo. Las pruebas comprueban que la hoja publicada es idéntica a la que dibuja el generador.
 
 ## Archivos compartidos
 
@@ -117,13 +123,14 @@ Las actividades de cada nivel combinan tipos de reto: crear en el taller, escrib
 
 ## El taller
 
-`proyectos.html#taller-control` abre el taller de un proyecto disponible; sin las 90 misiones, el enlace vuelve a la lista. La pantalla tiene tres zonas:
+`proyectos.html#taller-control` abre el taller de un proyecto disponible; sin las 90 misiones, el enlace vuelve a la lista. La pantalla tiene tres zonas, y una cuarta en los niveles con tablero:
 
 | Zona | Qué ofrece |
 | --- | --- |
 | Explorador | Nombre del proyecto, botones para crear carpetas y archivos dentro de la carpeta seleccionada y borrado con confirmación. Los nombres se validan mientras se escriben: carpetas en minúscula, archivos `Clase.java` con mayúscula, sin acentos, espacios ni repetidos, y sin usar `Robot` ni los archivos del juego. |
 | Editor | Pestañas de archivos abiertos, colores de sintaxis, números de línea con los errores y avisos marcados, sangría automática y Tab para insertar espacios (Esc y después Tab sale del editor). **Probar** analiza y ejecuta; el resultado aparece en Problemas, Consola y Objetos, con los atributos de cada objeto creado. |
 | Objetivos | Miaubit comenta cada paso, los objetivos se marcan en vivo y las pistas se piden de una en una. Los objetivos que dependen de la ejecución esperan a **Probar**, y cualquier cambio en el código invalida la ejecución anterior. Cada nivel enlaza las misiones donde se aprendió lo que usa. |
+| Escenario | Sobre el editor: el tablero con Miaubit y la lista **Prueba del juego**. Cada prueba es una acción que el juego ejecuta al pulsar **Probar** (en el nivel 3, crear un botón y pulsarlo) y comprueba que Miaubit se mueva exactamente lo esperado desde donde lo dejó la anterior, así un error no oculta los demás. La lista indica de dónde a dónde se movió Miaubit, y **Repetir animación** vuelve a mostrarla. Los objetivos se revelan cuando termina la animación. |
 
 Al cumplir todos los objetivos se celebra el nivel y el código pasa al siguiente. Cada nivel define sus objetivos como funciones sobre los archivos y, si hace falta, sobre la última ejecución; un objetivo puede explicar por qué falla con los términos de su misión, por ejemplo los atributos en `null` sin `this` (m53).
 
@@ -138,8 +145,8 @@ Cada etapa termina en un pull request de `diego` hacia `main`, con todas las pru
 | 0 · Diseño | Este documento |
 | 1 · Entrada y candado | Página, enlace en el inicio, pantalla de bloqueo, tarjetas de los tres proyectos y pruebas en CI |
 | 2 · Taller | Explorador, editor, unión de archivos, errores por archivo y línea, avance en el navegador y los niveles 1 y 2 del Proyecto 1, que no necesitan escenario |
-| 3 · Escena y arte | Escena Phaser propia, caminata de Miaubit, control dibujado desde los objetos y generador en `tools/miaubit-arte/` |
-| 4 · Proyecto 1 | Niveles 3 a 5, que usan el escenario y el control |
+| 3 · Escena y arte | Escena Phaser propia, caminata de Miaubit, generador en `tools/miaubit-arte/` y el nivel 3 del Proyecto 1, el primero con escenario |
+| 4 · Proyecto 1 | Control virtual dibujado desde los objetos del jugador, repetición de pulsaciones y niveles 4 y 5 |
 | 5 · Proyecto 2 | Sus cinco niveles completos |
 | 6 · Proyecto 3 | Sus cinco niveles completos |
 
@@ -154,6 +161,8 @@ Quedan para después: el guardado por usuario y una historia que conecte los tre
 - Los nombres de carpetas y archivos, la regla de una clase por archivo y los avisos de construcciones excluidas.
 - Cada nivel jugable empieza sin completar con los archivos del nivel anterior, y su solución de referencia cumple todos los objetivos sin avisos.
 - El avance guardado en el navegador se sanea antes de usarse, y el resaltado de sintaxis escapa el código.
+- Las pruebas del nivel 3 distinguen movimientos correctos, cruzados, ausentes y choques, y explican cada caso; los fotogramas de la escena y la dirección de un choque se calculan sin navegador.
+- La hoja de caminata publicada es idéntica a la que dibuja `tools/miaubit-arte/`, mide 192 × 192 y se empaqueta como `image/png`.
 - Cada nivel cita misiones existentes y su código no contiene construcciones excluidas (`else if`, `switch`, `package`, `import`).
 - La repetición de pulsaciones reproduce el mismo estado.
 - Los proyectos, niveles y misiones citadas coinciden con las tablas de este documento.

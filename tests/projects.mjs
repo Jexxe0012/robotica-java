@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {loadStaticAssets} from '../scripts/static-assets.mjs';
+import {sheet} from '../tools/miaubit-arte/cat48.mjs';
 import '../web/engine.js';import '../web/lessons.js';import '../web/proyectos/catalogo.js';import '../web/proyectos/espacio.js';import '../web/proyectos/niveles.js';
 const {missionIds,projects,unlockState,available,isDevHost}=MiaubitProjects,W=MiaubitWorkshop,Levels=MiaubitLevels;
 
@@ -111,9 +112,34 @@ for(const project of projects){
   previous=level.solution;
  }
 }
-assert.equal(Levels.count('control'),2);assert.equal(Levels.get('control',2),null);assert.equal(Levels.count('cosecha'),0);
+assert.equal(Levels.count('control'),3);assert.equal(Levels.get('control',3),null);assert.equal(Levels.count('cosecha'),0);
 const noThis={...l2.solution,files:{'src/Boton.java':boton.replace(/this\./g,'')}},missing=Levels.evaluate(l2,noThis,W.run(noThis,{harness:l2.harness}));
 assert.equal(missing.complete,false);assert.match(missing.tasks.find(t=>t.explain).explain,/misión 53/);
+
+// Level 3 probes each button from where the previous one left Miaubit, so one mistake does not hide the rest.
+const l3=Levels.get('control',2),pulsar=l3.solution.files['src/Boton.java'],withBoton=text=>({...l3.solution,files:{'src/Boton.java':text}});
+const run3=ws=>W.run(ws,{harness:l3.harness,initial:l3.initial});
+assert.deepEqual(Levels.probe(l3,l3.solution).map(p=>[p.state,p.to]),[['ok',[1,2]],['ok',[1,1]],['ok',[0,1]],['ok',[0,2]]]);
+const crossed=withBoton(pulsar.replace('r.norte();','TMP').replace('r.sur();','r.norte();').replace('TMP','r.sur();'));
+assert.deepEqual(Levels.probe(l3,crossed).map(p=>p.state),['ok','wrong','ok','wrong']);
+const crossedState=Levels.evaluate(l3,crossed,run3(crossed));assert.equal(crossedState.complete,false);assert.match(crossedState.tasks.at(-1).explain,/de \(1, 2\) a \(1, 3\).*"norte"/);
+const wall=withBoton(pulsar.replace('{ r.oeste(); }','{ r.oeste(); r.oeste(); }')),wallRun=run3(wall);
+assert.deepEqual(Levels.probe(l3,wall).map(p=>p.state),['ok','ok','error','skipped']);
+assert.equal(W.blocked(wallRun,wall),2);assert.equal(wallRun.error.path,'src/Boton.java');
+const noMove=withBoton(pulsar.replace(/r\.\w+\(\); /g,''));assert.match(Levels.evaluate(l3,noMove,run3(noMove)).tasks.at(-1).explain,/no movió a Miaubit.*misión 26/);
+assert.match(Levels.evaluate(l3,withBoton(pulsar.replace(/direccion\.equals\(("\w+")\)/g,'direccion == $1')),run3(withBoton(pulsar.replace(/direccion\.equals\(("\w+")\)/g,'direccion == $1')))).tasks.at(-1).explain,/equals/);
+
+// The stage animates the visual frames of a run and knows which way a blocked robot was heading.
+assert.deepEqual(W.frames(run3(l3.solution).result).map(f=>f.robots.map(r=>[r.x,r.y]).flat()),[[0,2],[1,2],[1,1],[0,1],[0,2]]);
+assert.deepEqual(W.frames(null),[]);assert.equal(W.blocked(run3(l3.solution),l3.solution),null);
+const paso={name:'x',folders:[],files:{'Paso.java':'class Paso {\n  void dar(Robot r) {\n    r.girarIzquierda();\n    r.avanzar();\n    r.avanzar();\n    r.avanzar();\n  }\n}'}},ahead=W.run(paso,{harness:'Paso p = new Paso();\np.dar(robot);'});
+assert.deepEqual([ahead.error.path,ahead.error.line],['Paso.java',6]);assert.equal(W.blocked(ahead,paso),3);
+assert.equal(W.blocked(W.run(project,{harness:'Control c = new Control();\nc.romper();'}),project),null);
+
+// The project mode walk sheet is exactly what the versioned generator draws: 192 × 192, four rows of four 48 px frames.
+const walk=await readFile('web/proyectos/assets/miaubit-camina.png');
+assert(walk.equals(sheet().pix.png()),'miaubit-camina.png matches tools/miaubit-arte');assert.deepEqual([walk.readUInt32BE(16),walk.readUInt32BE(20)],[192,192]);
+assert((await readFile('web/proyectos/escena.js','utf8')).includes("'proyectos/assets/miaubit-camina.png'"));
 
 // Browser progress is sanitized; a project is finished only with all its levels.
 const progress=Levels.restore({projects:{control:{workspace:l1.solution,level:9,done:[1,1,0,7,'x']},piloto:{workspace:null},otro:{workspace:l1.solution}}});
@@ -133,8 +159,8 @@ const {assets,version}=await loadStaticAssets(),packaged=assets['/proyectos.html
 assert.equal(packaged?.type,'text/html; charset=utf-8');assert(packaged.body.includes(`data-asset-version="${version}"`));
 for(const match of packaged.body.matchAll(/(?:src|href)="([^"#]+)"/g))if(!match[1].startsWith('data:'))assert(match[1].endsWith('?v='+version),match[1]+' versioned in proyectos.html');
 for(const key of ['/proyectos/catalogo.js','/proyectos/pagina.js'])assert.equal(assets[key]?.type,'text/javascript; charset=utf-8',key);
-assert.equal(assets['/proyectos/proyectos.css']?.type,'text/css; charset=utf-8');
+assert.equal(assets['/proyectos/proyectos.css']?.type,'text/css; charset=utf-8');assert.equal(assets['/proyectos/assets/miaubit-camina.png']?.type,'image/png');assert.equal(assets['/phaser.js']?.type,'text/javascript; charset=utf-8');
 assert(assets['/proyectos/proyectos.css'].body.includes(`url('../assets/fonts/pixelify-sans.ttf?v=${version}')`));
 assert(assets['/index.html'].body.includes(`href="proyectos.html?v=${version}"`));
 
-console.log('PASS: project mode catalog, 90-mission unlock, local-only early access, ordered projects, documented levels, workshop files and errors, playable levels and versioned page.');
+console.log('PASS: project mode catalog, 90-mission unlock, local-only early access, ordered projects, documented levels, workshop files and errors, playable levels, stage frames and probes, generated walk sheet and versioned page.');

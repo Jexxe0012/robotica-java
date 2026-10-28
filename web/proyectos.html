@@ -11,6 +11,7 @@
 <script src="proyectos/catalogo.js" defer></script>
 <script src="proyectos/espacio.js" defer></script>
 <script src="proyectos/niveles.js" defer></script>
+<script src="proyectos/escena.js" defer></script>
 <script src="proyectos/taller.js" defer></script>
 <script src="proyectos/pagina.js" defer></script>
 </head><body>
@@ -81,6 +82,14 @@
    <button id="reset-project" class="text-tool" type="button">Empezar el proyecto de nuevo</button>
   </aside>
   <section class="workbench" aria-label="Editor">
+   <div id="stage" class="stage" hidden>
+    <div class="stage-screen"><div id="stage-canvas" class="stage-canvas" role="img" aria-label="Escenario de pruebas"></div><p id="stage-loading" class="stage-loading">Preparando el escenario…</p></div>
+    <div class="stage-side">
+     <h2 class="panel-title">Prueba del juego</h2>
+     <ol id="probes" class="probes"></ol>
+     <button id="stage-replay" class="tool" type="button" disabled>↻ Repetir animación</button>
+    </div>
+   </div>
    <div id="tabs" class="tabs" role="tablist" aria-label="Archivos abiertos"></div>
    <div id="editor" class="editor">
     <ol id="gutter" class="gutter" aria-hidden="true"></ol>

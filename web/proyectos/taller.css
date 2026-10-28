@@ -47,6 +47,25 @@
 .text-tool{margin-top:14px;padding:4px 0;border:0;background:none;color:#7f978c;font-size:.75rem;text-decoration:underline;cursor:pointer;text-align:left}
 
 .workbench{display:flex;flex-direction:column;min-width:0}
+.stage{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:12px;border-bottom:2px solid #2b3f37;background:radial-gradient(ellipse at 25% 40%,#1e1a3a 0,#0b1513 70%)}
+.stage-screen{position:relative;justify-self:start;padding:6px;border:2px solid #5a4f96;background:#08110f;box-shadow:0 0 0 4px #8f7fd61a,6px 6px 0 #05090a}
+.stage-canvas{min-width:304px;min-height:256px;line-height:0}
+.stage-canvas canvas{display:block;image-rendering:pixelated}
+.stage-loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:12px;background:#08110fe6;color:var(--muted);font:700 .8rem var(--pixel);text-align:center}
+.stage-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.stage-side .panel-title{margin:0}
+.stage-side .tool{align-self:start}
+.probes{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.probes li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:2px 9px;padding:7px 8px;border:1px solid #2b3f37;background:#0b1513}
+.probe-mark{grid-row:span 2;display:grid;place-items:center;width:22px;height:22px;border:2px solid var(--line);color:var(--muted);font:700 .75rem var(--pixel)}
+.probes code{overflow-wrap:anywhere;color:#8fd3c1;font:600 .78rem var(--mono)}
+.probe-detail{color:var(--muted);font-size:.8rem}
+.probes li[data-state="ok"]{border-color:#2f6b4f;background:#0f2219}
+.probes li[data-state="ok"] .probe-mark{border-color:var(--mint);background:var(--mint);color:#0b1714}
+.probes li[data-state="wrong"],.probes li[data-state="error"]{border-color:#5a2f2c;background:#1d1214}
+.probes li[data-state="wrong"] .probe-mark,.probes li[data-state="error"] .probe-mark{border-color:#e38d79;background:#e38d79;color:#1d1214}
+.probes li[data-state="wrong"] .probe-detail,.probes li[data-state="error"] .probe-detail{color:#ead2cc}
+.workbench:has(.stage:not([hidden])) .editor{height:clamp(220px,34vh,420px)}
 .tabs{display:flex;gap:2px;min-height:40px;padding:6px 6px 0;overflow-x:auto;background:#08110f;border-bottom:2px solid #2b3f37}
 .tab{display:flex;flex:none;align-items:center;border:1px solid #2b3f37;border-bottom:0;background:#0f1a18}
 .tab[data-active]{border-color:var(--line);background:var(--code);box-shadow:inset 0 2px var(--gold)}
@@ -136,7 +155,9 @@
 @media (max-width:760px){
  .taller-top{grid-template-columns:minmax(0,1fr)}
  .taller-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"mission" "explorer" "bench"}
- .editor{height:340px}
+ .editor,.workbench:has(.stage:not([hidden])) .editor{height:340px}
+ .stage{grid-template-columns:minmax(0,1fr);padding:10px 8px}
+ .stage-screen{justify-self:center}
 }
 @media (prefers-reduced-motion:reduce){
  .object,.bubble.talk,.tasks li.just-done,.confetti i{animation:none}
