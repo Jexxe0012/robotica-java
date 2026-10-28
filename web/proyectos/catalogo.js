@@ -33,7 +33,7 @@
     level('El contrato','La interfaz Piloto define paso(Robot r).',['m65','m66']),
     level('Dos pilotos','Patrulla usa puedeAvanzar(); Directo avanza con while hasta el obstáculo.',['m29','m38','m67']),
     level('La flota','Arreglos con robot, ayudante y un piloto para cada uno.',['m60','m77','m85']),
-    level('Patrulla final','En cada turno Miaubit sigue el control y Luna da un paso con su piloto.',['m64','m85','m90'])
+    level('Patrulla final','En cada turno Miaubit sigue tu control y Luna da un paso con su piloto: llega a la estrella sin chocar con ella.',['m64','m85','m90'])
    ]}
  ].map(p=>Object.freeze({...p,levels:Object.freeze(p.levels.map(Object.freeze))}));
  // The workshop opens with the 90 real completions; unknown or repeated ids never count.

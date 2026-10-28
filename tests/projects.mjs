@@ -114,7 +114,8 @@ for(const project of projects){
   previous=level.solution;
  }
 }
-assert.equal(Levels.count('control'),5);assert.equal(Levels.get('control',5),null);assert.equal(Levels.count('cosecha'),5);assert.equal(Levels.get('cosecha',5),null);assert.equal(Levels.count('piloto'),0);
+assert.equal(Levels.count('control'),5);assert.equal(Levels.get('control',5),null);assert.equal(Levels.count('cosecha'),5);assert.equal(Levels.get('cosecha',5),null);assert.equal(Levels.count('piloto'),5);assert.equal(Levels.get('piloto',5),null);
+for(const project of projects)assert.equal(Levels.count(project.id),project.levels.length,`${project.id} has every catalog level`);
 const noThis={...l2.solution,files:{'src/Boton.java':boton.replace(/this\./g,'')}},missing=Levels.evaluate(l2,noThis,W.run(noThis,{harness:l2.harness}));
 assert.equal(missing.complete,false);assert.match(missing.tasks.find(t=>t.explain).explain,/misión 53/);
 
@@ -203,6 +204,40 @@ assert.deepEqual(Levels.hudOf(c5,fullHarvest),{puntos:4,meta:4,energia:8,cristal
 assert.deepEqual(Levels.hudOf(c5,harvest([])),{puntos:0,meta:4,energia:8,cristales:4,total:4});assert(!Levels.won(c5,harvest([])));assert.equal(Levels.hudOf(c5,null),null);
 assert.match(harvest(['arriba','arriba','derecha','derecha','derecha','derecha','derecha','abajo','abajo']).error.message,/energía/);
 assert(fullHarvest.result.trace.length<1200);
+
+// Project 3, level 1: the class plan is checked piece by piece, saved with the workspace and turned into skeleton files.
+const [a1,a2,a3,a4,a5]=[0,1,2,3,4].map(i=>Levels.get('piloto',i)),pilotStart=Levels.startWorkspace('piloto',own);
+assert.deepEqual(Object.keys(pilotStart.files),['control/Boton.java','control/Control.java']);assert.match(pilotStart.files['control/Control.java'],/mío/);
+assert(Levels.planCheck(pilotStart).every(c=>c.hint==='Elige qué es esta pieza.'));assert.equal(Levels.generatePlan(pilotStart),null);
+const halfPlan=Levels.planCheck({...pilotStart,plan:{PilotoTipo:'clase',PatrullaTipo:'clase',PatrullaRelacion:'contiene'}});
+assert.match(halfPlan[0].hint,/contrato/);assert.equal(halfPlan[1].kindOk,true);assert.match(halfPlan[1].hint,/promesa de Piloto/);
+const planned=Levels.generatePlan({...pilotStart,plan:a1.solution.plan});
+assert.deepEqual(Object.keys(planned.files).filter(p=>p.startsWith('pilotos/')),['pilotos/Piloto.java','pilotos/Patrulla.java','pilotos/Directo.java','pilotos/Flota.java']);
+assert.deepEqual(W.problemsOf(planned),[]);assert.equal(Levels.generatePlan({...planned,files:{...planned.files,'pilotos/Flota.java':'class Flota {\n  // mío\n}\n'}}).files['pilotos/Flota.java'],'class Flota {\n  // mío\n}\n');
+assert.deepEqual(W.restore({name:'x',folders:[],files:{},plan:{PilotoTipo:'interfaz','mal-clave':'x',FlotaTipo:'CLASE',Otro:3}}).plan,{PilotoTipo:'interfaz'});
+assert.deepEqual(W.addFolder(planned,'','extra').workspace.plan,planned.plan);
+
+// Project 3, levels 2 to 4: the contract, two pilots (one turns, one loops) and a fleet that pairs each robot with its pilot.
+const pilotFile=(level,name,text)=>({...level.solution,files:{...level.solution.files,[`pilotos/${name}.java`]:text}});
+const pilotExplainOf=(level,ws)=>Levels.evaluate(level,ws,W.run(ws,{game:level.game,harness:Levels.harnessFor(level),initial:level.initial??{}})).tasks.find(t=>t.explain)?.explain;
+assert.match(pilotExplainOf(a2,pilotFile(a2,'Patrulla','class Patrulla {\n}\n')),/implements Piloto/);
+assert.deepEqual(Levels.probe(a3,a3.solution).map(p=>[p.state,p.after.Miaubit]),[['ok',[2,2,0]],['ok',[2,2,1]],['ok',[2,3,1]]]);
+const directo=a3.solution.files['pilotos/Directo.java'],patrulla=a3.solution.files['pilotos/Patrulla.java'];
+assert.match(pilotExplainOf(a3,pilotFile(a3,'Directo',directo.replace('while','if'))),/\(1, 2\).*while.*misión 38/);
+assert.match(pilotExplainOf(a3,pilotFile(a3,'Patrulla','class Patrulla implements Piloto {\n  public void paso(Robot r) {\n    r.avanzar();\n  }\n}\n')),/chocó.*puedeAvanzar/);
+assert.match(pilotExplainOf(a3,pilotFile(a3,'Patrulla',patrulla.replace('girarDerecha','girarIzquierda'))),/mirando al norte/);
+assert.deepEqual(Levels.probe(a4,a4.solution).map(p=>[p.state,p.after]),[['ok',{Miaubit:[3,2,0],Luna:[1,3,0]}],['ok',{Miaubit:[3,2,0],Luna:[2,3,0]}]]);
+const flota=a4.solution.files['pilotos/Flota.java'];
+assert.match(pilotExplainOf(a4,pilotFile(a4,'Flota',flota.replace('pilotos[i].paso(robots[i]);','pilotos[0].paso(robots[i]);'))),/piloto equivocado.*misión 85/);
+assert.match(pilotExplainOf(a4,pilotFile(a4,'Flota',flota.replace('i < robots.length','i < 1'))),/primer robot.*misión 77/);
+
+// Project 3, level 5: Luna patrols on her own; every shortest route meets her, the reference route waits and arrives.
+const patrol=presses=>Object.assign(W.run(a5.solution,{game:a5.game,harness:Levels.playHarness(a5,presses),initial:a5.initial}),{presses:presses.length});
+const direct=['derecha','arriba','derecha','derecha','derecha','derecha'];
+assert.equal(direct.findIndex((_,i)=>Levels.collided(patrol(direct.slice(0,i+1)))),5);
+const arrived=patrol(a5.route);assert(Levels.reached(arrived,a5));assert(!Levels.collided(arrived));assert(Levels.won(a5,arrived));assert(arrived.result.trace.length<1200);
+assert.match(pilotExplainOf(a5,pilotFile(a5,'Flota',flota.replace('pilotos[i].paso(robots[i]);',''))),/Luna debía llegar a \(5, 0\)/);
+assert.equal(Levels.collided(W.run(a5.solution,{game:a5.game,harness:Levels.playHarness(a5,[]),initial:a5.initial})),false);
 
 // The project mode walk sheet is exactly what the versioned generator draws: 192 × 192, four rows of four 48 px frames.
 const walk=await readFile('web/proyectos/assets/miaubit-camina.png');

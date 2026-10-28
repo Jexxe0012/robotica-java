@@ -113,13 +113,17 @@ El proyecto empieza con el control **propio** del jugador: `Boton.java` y `Contr
 
 Diseñar una arquitectura con polimorfismo: Luna patrulla sola mientras Miaubit obedece el control.
 
+Como el Proyecto 2, empieza con el control propio del jugador en la carpeta `control`. El nivel 1 no tiene código: un **plano de clases** con una tarjeta por pieza (`Piloto`, `Patrulla`, `Directo`, `Flota` y `Robot`, que pone el juego). En cada tarjeta se elige si es interfaz o clase y cómo se relaciona; las líneas del plano muestran las relaciones elegidas (`implementa` punteada hacia `Piloto`, `contiene` desde `Flota`) y cada tarjeta da una pista ligada a su misión. El plano se guarda con el proyecto y, cuando es correcto, **Generar archivos del plano** crea en `pilotos/` las clases vacías que faltan, sin sobrescribir las del jugador.
+
+Las pruebas del nivel 3 comprueban también hacia dónde quedó mirando Miaubit, y las del nivel 4 mueven a Miaubit y a Luna a la vez. En el nivel 5, Luna avanza un paso con su `Patrulla` después de cada flecha; si una flecha deja a los dos robots en la misma casilla, el juego la descarta y avisa. Las ocho rutas más cortas hasta la estrella coinciden con Luna en algún turno, así que hay que ganar tiempo.
+
 | Nivel | Actividad | Misiones |
 | --- | --- | --- |
 | 1 · Arquitectura | Diagrama de clases interactivo: decidir clases, contrato y composición antes de programar | m70, m90 |
 | 2 · El contrato | `interface Piloto { void paso(Robot r); }` | m65, m66 |
 | 3 · Dos pilotos | `Patrulla` avanza si `puedeAvanzar()` y gira si no; `Directo` avanza con `while` hasta el obstáculo | m29, m38, m67 |
 | 4 · La flota | Un arreglo `Robot[]` con `robot` y `ayudante` y un arreglo `Piloto[]` con un piloto para cada uno | m60, m77, m85 |
-| 5 · Patrulla final | En cada turno, Miaubit sigue el control y Luna da un paso con su piloto | m64, m85, m90 |
+| 5 · Patrulla final | En cada turno, Miaubit sigue el control y Luna da un paso con su piloto; llegar a la estrella sin chocar con ella | m64, m85, m90 |
 
 Las actividades de cada nivel combinan tipos de reto: crear en el taller, escribir o completar una clase, corregir un error y probar en el escenario. La retroalimentación es inmediata: mensajes del intérprete con su archivo y línea, el objeto afectado resaltado y el resultado visible en el tablero.
 
@@ -151,7 +155,7 @@ Cada etapa termina en un pull request de `diego` hacia `main`, con todas las pru
 | 3 · Escena y arte | Escena Phaser propia, caminata de Miaubit, generador en `tools/miaubit-arte/` y el nivel 3 del Proyecto 1, el primero con escenario |
 | 4 · Proyecto 1 | Control virtual dibujado desde los objetos del jugador, repetición de pulsaciones y niveles 4 y 5 |
 | 5 · Proyecto 2 | Sus cinco niveles: carpeta de reglas, marcador protegido, reglas con cristales, energía y meta, y la partida con marcador |
-| 6 · Proyecto 3 | Sus cinco niveles completos |
+| 6 · Proyecto 3 | Sus cinco niveles: plano de clases que genera archivos, contrato `Piloto`, dos pilotos, flota con arreglos y patrulla con dos robots |
 
 Quedan para después: el guardado por usuario y una historia que conecte los tres proyectos con la expedición.
 
@@ -168,6 +172,8 @@ Quedan para después: el guardado por usuario y una historia que conecte los tre
 - La hoja de caminata publicada es idéntica a la que dibuja `tools/miaubit-arte/`, mide 192 × 192 y se empaqueta como `image/png`.
 - `Mando.java` es del juego: queda reservado, se une primero y no forma parte de los archivos del jugador. Las flechas del nivel 4 detectan la interfaz ausente, flechas cruzadas o sin movimiento.
 - El control toma cada flecha del `Boton` con su dirección y avisa de colores desconocidos o faltantes. La repetición de pulsaciones es determinista, 20 pulsaciones caben en la energía y la siguiente se detiene; la ruta de referencia llega a la estrella y una ruta incompleta no.
+- El Proyecto 3 revisa el plano pieza por pieza, lo guarda saneado y genera los archivos sin sobrescribir; explica una clase que no implementa `Piloto`, un `Directo` sin `while`, una `Patrulla` sin sensor o que gira al revés y una flota que usa el piloto equivocado o recorre un solo robot. En su final, las rutas directas chocan con Luna y la de referencia llega.
+- Cada proyecto tiene todos los niveles de su catálogo jugables.
 - El Proyecto 2 empieza con el control propio del jugador, explica un marcador sin validar, recoger sin `hayCaja()`, la falta de recarga, recargar fuera de la estación, el constructor sin meta y un `termino()` incorrecto, y su partida se gana recogiendo los cuatro cristales con el marcador leído de los objetos.
 - El nivel 5 del Proyecto 1 explica un contador que no suma, la falta de `getPulsaciones()` y un diseño con menos de tres colores, y solo se completa al llegar jugando.
 - Cada nivel cita misiones existentes y su código no contiene construcciones excluidas (`else if`, `switch`, `package`, `import`).
