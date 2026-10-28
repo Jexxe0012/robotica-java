@@ -12,7 +12,7 @@
     level('El plano del botón','Clase Boton con dirección, color y un constructor que usa this.',['m51','m52','m53','m26']),
     level('Cada botón sabe moverse','pulsar(Robot r) con una condición if y equals() por dirección.',['m26','m41','m48']),
     level('Arma el control','Control implementa Mando con cuatro botones privados.',['m57','m62','m65','m66','m90']),
-    level('Diseña y juega','Cambia colores y etiquetas y lleva a Miaubit a la meta con tu control.',['m58','m68'])
+    level('Diseña y juega','Cuenta las pulsaciones en un atributo privado, elige los colores y lleva a Miaubit a la estrella con tu control.',['m58','m68'])
    ]},
   {id:'cosecha',number:2,title:'La cosecha de cristales',focus:'Infraestructura y reglas',
    summary:'Convierte tu control en un juego: recoge cristales y gana antes de quedarte sin energía.',

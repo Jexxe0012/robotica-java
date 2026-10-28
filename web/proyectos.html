@@ -85,9 +85,24 @@
    <div id="stage" class="stage" hidden>
     <div class="stage-screen"><div id="stage-canvas" class="stage-canvas" role="img" aria-label="Escenario de pruebas"></div><p id="stage-loading" class="stage-loading">Preparando el escenario…</p></div>
     <div class="stage-side">
-     <h2 class="panel-title">Prueba del juego</h2>
-     <ol id="probes" class="probes"></ol>
-     <button id="stage-replay" class="tool" type="button" disabled>↻ Repetir animación</button>
+     <div id="probes-panel" class="probes-panel">
+      <h2 class="panel-title">Prueba del juego</h2>
+      <ol id="probes" class="probes"></ol>
+      <button id="stage-replay" class="tool" type="button" disabled>↻ Repetir animación</button>
+     </div>
+     <div id="pad-panel" class="pad-panel" hidden>
+      <h2 class="panel-title">Tu control</h2>
+      <div class="pad-row">
+       <div id="pad" class="pad" role="group" aria-label="Control de Miaubit">
+        <button class="pad-key" data-key="arriba" type="button" disabled></button>
+        <button class="pad-key" data-key="izquierda" type="button" disabled></button>
+        <span class="pad-core" aria-hidden="true"></span>
+        <button class="pad-key" data-key="derecha" type="button" disabled></button>
+        <button class="pad-key" data-key="abajo" type="button" disabled></button>
+       </div>
+       <div class="pad-side"><p id="pad-info" class="pad-info" role="status"></p><button id="pad-reset" class="tool" type="button" disabled>Reiniciar tablero</button></div>
+      </div>
+     </div>
     </div>
    </div>
    <div id="tabs" class="tabs" role="tablist" aria-label="Archivos abiertos"></div>

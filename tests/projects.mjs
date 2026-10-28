@@ -103,16 +103,18 @@ assert.equal(W.highlight('a < b && c > d').replace(/<span[^>]*>|<\/span>/g,''),'
 for(const project of projects){
  let previous=W.empty();
  for(let i=0;i<Levels.count(project.id);i++){
-  const level=Levels.get(project.id,i),run=ws=>W.run(ws,{game:level.game??[],harness:level.harness??'',initial:level.initial??{}});
+  const level=Levels.get(project.id,i),run=ws=>W.run(ws,{game:level.game??[],harness:Levels.harnessFor(level),initial:level.initial??{}});
+  // Play levels are won with the control: their solution is checked after pressing the reference route.
+  const solved=ws=>level.play?Object.assign(W.run(ws,{game:level.game??[],harness:Levels.playHarness(level,level.route),initial:level.initial??{}}),{presses:level.route.length}):run(ws);
   assert(level.intro&&level.hints.length&&level.tasks.length,`${project.id} level ${i+1}`);
   assert.equal(Levels.evaluate(level,previous,run(previous)).complete,false,`${project.id} level ${i+1} starts unfinished`);
-  assert.equal(Levels.evaluate(level,level.solution,run(level.solution)).complete,true,`${project.id} level ${i+1} solution`);
+  assert.equal(Levels.evaluate(level,level.solution,solved(level.solution)).complete,true,`${project.id} level ${i+1} solution`);
   assert.deepEqual(W.problemsOf(level.solution),[],`${project.id} level ${i+1} solution follows the rules`);
   if(level.tasks.some(t=>t.needsRun))assert.equal(Levels.evaluate(level,level.solution).complete,false,'run tasks wait for a run');
   previous=level.solution;
  }
 }
-assert.equal(Levels.count('control'),3);assert.equal(Levels.get('control',3),null);assert.equal(Levels.count('cosecha'),0);
+assert.equal(Levels.count('control'),5);assert.equal(Levels.get('control',5),null);assert.equal(Levels.count('cosecha'),0);
 const noThis={...l2.solution,files:{'src/Boton.java':boton.replace(/this\./g,'')}},missing=Levels.evaluate(l2,noThis,W.run(noThis,{harness:l2.harness}));
 assert.equal(missing.complete,false);assert.match(missing.tasks.find(t=>t.explain).explain,/misión 53/);
 
@@ -135,6 +137,43 @@ assert.deepEqual(W.frames(null),[]);assert.equal(W.blocked(run3(l3.solution),l3.
 const paso={name:'x',folders:[],files:{'Paso.java':'class Paso {\n  void dar(Robot r) {\n    r.girarIzquierda();\n    r.avanzar();\n    r.avanzar();\n    r.avanzar();\n  }\n}'}},ahead=W.run(paso,{harness:'Paso p = new Paso();\np.dar(robot);'});
 assert.deepEqual([ahead.error.path,ahead.error.line],['Paso.java',6]);assert.equal(W.blocked(ahead,paso),3);
 assert.equal(W.blocked(W.run(project,{harness:'Control c = new Control();\nc.romper();'}),project),null);
+
+// Level 4: the game's Mando contract is read-only, reserved and joined first; the arrows are probed through it.
+const l4=Levels.get('control',3),l5=Levels.get('control',4),control4=l4.solution.files['src/Control.java'],control5=l5.solution.files['src/Control.java'];
+const withControl=(level,text)=>({...level.solution,files:{...level.solution.files,'src/Control.java':text}});
+assert.deepEqual(l4.game.map(f=>f.path),['juego/Mando.java']);assert.match(l4.game[0].text,/interface Mando \{\n  void presionar\(String boton, Robot r\);/);
+assert.match(W.fileNameError(l4.solution,'Mando.java',['Mando']),/juego/);assert.equal(W.combine(l4.solution,{game:l4.game}).starts[0].path,'juego/Mando.java');
+const explain4=ws=>Levels.evaluate(l4,ws,W.run(ws,{game:l4.game,harness:l4.harness,initial:l4.initial})).tasks.find(t=>t.explain)?.explain;
+assert.match(explain4(withControl(l4,control4.replace(' implements Mando',''))),/implements Mando/);
+assert.match(explain4(withControl(l4,control4.replace('{ arriba.pulsar(r); }','{ abajo.pulsar(r); }'))),/"arriba".*\(1, 2\) a \(1, 3\)/);
+assert.match(explain4(withControl(l4,control4.replace(/\w+\.pulsar\(r\); /g,''))),/no movió/);
+assert.equal(Levels.evaluate(l4,withControl(l4,control4.replace(/private /g,''))).tasks[2].done,false);
+
+// The control is drawn from the player's objects: each arrow uses the Boton whose direction matches it.
+const setupRun=ws=>W.run(ws,{game:l5.game,harness:Levels.playHarness(l5,[]),initial:l5.initial});
+const layout=Levels.padLayout(setupRun(l5.solution));
+assert.deepEqual(Object.fromEntries(Object.entries(layout).map(([key,b])=>[key,[b.direccion,b.color,b.known]])),{arriba:['norte','violeta',true],abajo:['sur','azul',true],derecha:['este','dorado',true],izquierda:['oeste','rosa',true]});
+const oddLayout=Levels.padLayout(setupRun(withControl(l5,control5.replace('"rosa"','"fucsia"').replace('new Boton("norte", "violeta")','new Boton("sur", "violeta")'))));
+assert.equal(oddLayout.arriba?.direccion,undefined);assert.equal(oddLayout.izquierda.known,false);assert.equal(oddLayout.izquierda.hex,'#5d6b66');
+assert.equal(Levels.padLayout(null),null);assert.equal(Levels.playHarness(l5,['arriba','salto']),l5.setup+'\nmando.presionar("arriba", robot);');
+
+// A play session replays every press from the start; energy 20 limits it, and the replay is deterministic.
+const playRun=(presses,initial={chargers:[]})=>W.run(l5.solution,{game:l5.game,harness:Levels.playHarness(l5,presses),initial});
+const twenty=Array.from({length:20},(_,i)=>i%2?'izquierda':'derecha');
+assert.equal(playRun(twenty).error,null);assert(playRun(twenty).result.trace.length<1200);assert.match(playRun([...twenty,'derecha']).error.message,/energía/);
+const short=W.frames(playRun(['derecha','arriba']).result),long=W.frames(playRun(['derecha','arriba','arriba']).result);assert.deepEqual(long.slice(0,short.length),short);
+assert(Levels.reached(playRun(l5.route,l5.initial),l5));assert(!Levels.reached(playRun(l5.route.slice(0,-1),l5.initial),l5));
+const rock=playRun(['derecha','derecha'],l5.initial);assert.match(rock.error.message,/obstáculo/);assert.equal(W.blocked(rock,l5.solution),0);
+
+// Level 5 explains the counter and the design in the terms of its missions.
+const explain5=ws=>Levels.evaluate(l5,ws,W.run(ws,{game:l5.game,harness:l5.setup,initial:l5.initial})).tasks.filter(t=>t.explain).map(t=>t.explain);
+assert.match(explain5(withControl(l5,control5.replace('    pulsaciones++;\n','')))[0],/devolvió 0/);
+assert(explain5(withControl(l5,control5.replace('  public int getPulsaciones() {\n    return pulsaciones;\n  }\n',''))).some(e=>/public int getPulsaciones/.test(e)));
+assert(explain5(withControl(l5,control5.replace('"azul"','"fucsia"'))).some(e=>/"fucsia"/.test(e)));
+assert(explain5(withControl(l5,control5.replace('"azul"','"violeta"').replace('"rosa"','"violeta"'))).some(e=>/2 colores/.test(e)));
+assert.equal(Levels.harnessFor(l5),l5.setup);assert.equal(Levels.harnessFor(l4),l4.harness);assert.equal(Levels.harnessFor(l1),'');
+const notPlayed=Levels.evaluate(l5,l5.solution,W.run(l5.solution,{game:l5.game,harness:Levels.harnessFor(l5),initial:l5.initial}));
+assert.deepEqual(notPlayed.tasks.map(t=>t.done),[true,true,true,false]);assert.match(notPlayed.tasks[3].explain,/estrella/);
 
 // The project mode walk sheet is exactly what the versioned generator draws: 192 × 192, four rows of four 48 px frames.
 const walk=await readFile('web/proyectos/assets/miaubit-camina.png');
