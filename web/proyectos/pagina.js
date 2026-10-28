@@ -48,7 +48,7 @@
    gate.dataset.state='open';
    $('gate-label').textContent=state.dev?'MODO DESARROLLO · SOLO EN ESTE EQUIPO':'TALLER ABIERTO';
    $('gate-title').textContent=state.dev?'Taller abierto para desarrollar':'¡Completaste la expedición!';
-   $('gate-text').textContent=(state.dev?`El taller se abrió sin las 90 misiones; llevas ${state.done}. `:'Las 90 misiones te dieron todas las piezas. ')+'El Proyecto 1 ya tiene sus primeros niveles; el resto llega en las próximas actualizaciones.';
+   $('gate-text').textContent=(state.dev?`El taller se abrió sin las 90 misiones; llevas ${state.done}. `:'Las 90 misiones te dieron todas las piezas. ')+'El Proyecto 1 ya se puede jugar completo; los otros dos llegan en las próximas actualizaciones.';
   }else{
    gate.dataset.state='locked';$('gate-label').textContent='TALLER CERRADO';
    $('gate-title').textContent='Completa las 90 misiones para abrir el taller';
@@ -59,7 +59,8 @@
  function projectCard(project,index,state){
   const open=available(index,!!state?.unlocked,MiaubitTaller.finished()),playable=MiaubitLevels.count(project.id)>0,progress=MiaubitTaller.progress(project.id);
   const status=!state?.unlocked?['locked','Bloqueado','Completa las 90 misiones']:!open?['locked','Bloqueado',`Termina el Proyecto ${index}`]
-   :playable?['open',progress?.done.length?`${progress.done.length} de ${project.levels.length} niveles`:'Disponible',progress?'Continuar en el taller ▶':'Abrir el taller ▶']:['building','En construcción','Llega en la próxima actualización'];
+   :playable?progress?.done.length===project.levels.length?['open','¡Completado!','Volver a tu proyecto ▶']:['open',progress?.done.length?`${progress.done.length} de ${project.levels.length} niveles`:'Disponible',progress?'Continuar en el taller ▶':'Abrir el taller ▶']
+   :['building','En construcción','Llega en la próxima actualización'];
   const card=node('article','project');card.dataset.state=status[0];card.setAttribute('aria-labelledby',`project-${project.id}`);
   const head=node('header','project-head'),badge=node('span','project-icon'),titles=node('div'),title=node('h3','',project.title);
   title.id=`project-${project.id}`;badge.append(icon(status[0]==='locked'?'lock':project.id));
