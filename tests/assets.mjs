@@ -9,20 +9,26 @@ const {assets:expectedAssets,version:expectedVersion}=await loadStaticAssets();
 assert.equal(ASSET_VERSION,expectedVersion,'Build matches the current source');
 
 const regions=globalThis.AtlasWorlds;
+const campaign=globalThis.ExpeditionCampaign.regions;
 assert.equal(regions.length,9,'Nine chapter regions');
-assert.equal(new Set(regions.map(r=>r.image)).size,9,'Each chapter has its own image');
+assert.equal(campaign.length,regions.length,'Each chapter has an adventure map');
 assert.equal(new Set(regions.map(r=>JSON.stringify(r.points))).size,9,'Each chapter has its own route');
 const hashes=new Set();
-for(const region of regions){
+for(const [i,region] of regions.entries()){
+ const adventure=campaign[i];
+ assert.equal(adventure.id,region.id,'Adventure and atlas use the same chapter order');
  assert.equal(region.points.length,10,region.id+' has ten mission nodes');
  assert.equal(new Set(region.points.map(p=>p.join(','))).size,10,region.id+' nodes are distinct');
  for(const [x,y] of region.points)assert(x>=10&&x<=90&&y>=28&&y<=86,region.id+' route fits the map');
- const bytes=await readFile('web/'+region.image);
- assert.equal(bytes.toString('ascii',0,4),'RIFF',region.id+' WebP container');
- assert.equal(bytes.toString('ascii',8,12),'WEBP',region.id+' WebP format');
- hashes.add(createHash('sha256').update(bytes).digest('hex'));
+ for(const image of [region.image,adventure.terrain]){
+  const bytes=await readFile('web/'+image);
+  assert.equal(bytes.toString('ascii',0,4),'RIFF',image+' WebP container');
+  assert.equal(bytes.toString('ascii',8,12),'WEBP',image+' WebP format');
+  const hash=createHash('sha256').update(bytes).digest('hex');
+  assert(!hashes.has(hash),image+' is distinct artwork');
+  hashes.add(hash);
+ }
 }
-assert.equal(hashes.size,9,'Nine distinct landscapes, not renamed copies');
 // Test the packaged Worker, including binary bytes and HTTP semantics.
 for(const [url,file,type] of [
  ['/', 'web/index.html', 'text/html'],
@@ -40,9 +46,11 @@ for(const [url,file,type] of [
  ['/adventure-ui.js', 'web/adventure-ui.js', 'text/javascript'],
  ['/adventure-audio.js', 'web/adventure-audio.js', 'text/javascript'],
  ['/adventure.css', 'web/adventure.css', 'text/css'],
- ['/assets/maps/alba-village.json', 'web/assets/maps/alba-village.json', 'application/json'],
- ['/assets/tiles/alba.svg', 'web/assets/tiles/alba.svg', 'image/svg+xml'],
- ...ExpeditionCampaign.regions.slice(1).flatMap(r=>[['/'+r.map,'web/'+r.map,'application/json'],['/'+r.tiles,'web/'+r.tiles,'image/svg+xml']]),
+ ...campaign.flatMap(r=>[
+  ['/'+r.map,'web/'+r.map,'application/json'],
+  ['/'+r.tiles,'web/'+r.tiles,'image/svg+xml'],
+  ['/'+r.terrain,'web/'+r.terrain,'image/webp']
+ ]),
  ['/assets/fonts/pixelify-sans.ttf', 'web/assets/fonts/pixelify-sans.ttf', 'font/ttf'],
  ['/assets/fonts/OFL.txt', 'web/assets/fonts/OFL.txt', 'text/plain'],
  ['/assets/atlas-crt.png', 'web/assets/atlas-crt.png', 'image/png'],
@@ -88,11 +96,11 @@ for(const removed of ['chapter-one.js','phaser-world.js','robot.css']){
  assert(!runtime.includes(removed),removed+' stays removed');
  assert.equal((await worker.fetch(new Request('https://example.test/'+removed),{})).status,404);
 }
-const usedAssets=new Set(['assets/PHASER-LICENSE.txt','assets/fonts/OFL.txt',...regions.map(r=>r.image),...ExpeditionCampaign.regions.flatMap(r=>[r.map,r.tiles])]);
+const usedAssets=new Set(['assets/PHASER-LICENSE.txt','assets/fonts/OFL.txt',...regions.map(r=>r.image),...campaign.flatMap(r=>[r.map,r.tiles,r.terrain])]);
 const texts=[html,...await Promise.all(runtime.filter(name=>/\.(css|js)$/.test(name)).map(name=>readFile('web/'+name,'utf8')))];
 for(const text of texts)for(const match of text.matchAll(/assets\/[\w./-]+\.(?:png|webp|ttf|txt|svg)/g))usedAssets.add(match[0]);
 async function inspect(directory,prefix='assets'){
  for(const entry of await readdir(directory,{withFileTypes:true})){const name=prefix+'/'+entry.name;if(entry.isDirectory())await inspect(directory+'/'+entry.name,name);else assert(usedAssets.has(name),name+' is used by the game or required attribution');}
 }
 await inspect('web/assets');
-console.log('PASS: nine unique landscapes; packaged bytes/MIME/HEAD; private versioned cache, ETag/304, deployment invalidation, API isolation and no orphan runtime files.');
+console.log('PASS: unique landscapes and illustrated terrain for all nine chapters; packaged bytes/MIME/HEAD; private versioned cache, ETag/304, deployment invalidation, API isolation and no orphan runtime files.');

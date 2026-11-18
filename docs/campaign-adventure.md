@@ -26,7 +26,11 @@ La restauración representa luces, señales y el portal final; no introduce una 
 
 ## Mapas y Tiled
 
-Los nueve escenarios miden 12 × 9 mosaicos de 32 píxeles. Cada uno tiene una distribución diferente, una paleta oscura y un atlas SVG original con geometría pixel art. Las capas son `Suelo`, `Senderos`, `Vegetación` e `Historia`; esta última contiene objetos decorativos del entorno. Los SVG de 160 × 128 contienen 20 mosaicos, distribuidos en cinco columnas.
+Los nueve escenarios miden 12 × 9 mosaicos de 32 píxeles. Cada uno tiene una distribución diferente, una paleta oscura y un atlas SVG original con geometría pixel art. Las capas son `Suelo`, `Senderos`, `Vegetación` e `Historia`. Esta última contiene objetos decorativos del entorno. Los atlas tienen cinco columnas.
+
+El Alba añade 32 mosaicos de sendero al atlas. El generador elige una forma según los vecinos conectados y alterna dos acabados de tierra y piedra. Los extremos se alinean en cada borde, y las orillas transparentes dejan ver la hierba. El tablero conserva su cuadrícula lógica.
+
+Cada región tiene una ilustración cenital de terreno en `web/assets/maps/<id>-terrain.webp`, basada en su mapa de mosaicos y su paisaje original del selector de capítulos. Las diez misiones de la región comparten la ilustración. Phaser la solicita al visitar la región, la ajusta al tablero y guarda la textura para las siguientes visitas. El mapa de mosaicos funciona como respaldo mientras carga la imagen o si ocurre un error. Miaubit, las metas, las cajas, las coordenadas, las balizas y los portales se dibujan encima durante la misión.
 
 El área programable conserva **6 × 5 casillas**, desplazada a (2, 2) dentro del escenario. Phaser dibuja los mosaicos al doble de tamaño, con un origen visual de (128, 128). El Java del alumno mantiene su origen lógico (0, 0). El agua, los precipicios y las decoraciones no se colocan dentro del área lógica; las cajas, destinos, estaciones y obstáculos de cada misión vienen exclusivamente del intérprete.
 
@@ -35,7 +39,7 @@ Para modificar una región:
 1. Abrir su JSON en `web/assets/maps/` con Tiled; el Alba usa `alba-village.json` y las demás regiones `<id>-adventure.json`.
 2. Mantener el área lógica y las dimensiones actuales. Editar las capas de terreno y los objetos de `Historia`. La escena reconoce árboles, pinos, cristales, casas, mansión, torres, puertas, arcos, pilares, setos, fuentes, muelles, palmeras, obeliscos y observatorio.
 3. Mantener la referencia al tileset `../tiles/<id>.svg`. Los objetos nuevos usan posición en píxeles del mapa y una propiedad `scale` opcional.
-4. Ejecutar las pruebas de aventura y revisar la escena en el navegador.
+4. Revisar la alineación de la ilustración de terreno con el tablero y mantener la proporción 4:3. Ejecutar las pruebas de aventura y revisar la escena en el navegador.
 
 `node scripts/create-campaign-maps.mjs` reconstruye las ocho regiones posteriores al Alba desde las definiciones iniciales. `node scripts/create-alba-map.mjs` reconstruye el Alba. **El build no ejecuta estos generadores**: publica los JSON y SVG guardados. Ejecutarlos expresamente reemplaza las ediciones manuales de esos recursos. Cambiar el tamaño u origen lógico requiere adaptar también la escena y verificar el contrato Java.
 
