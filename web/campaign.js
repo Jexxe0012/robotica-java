@@ -187,7 +187,7 @@
    ]}
  ];
  const idFor=n=>'m'+String(n).padStart(2,'0');
- const regions=definitions.map((d,index)=>({...d,index,title:AtlasWorlds[index].title,ids:Array.from({length:10},(_,i)=>idFor(index*10+i+1)),map:index===0?'assets/maps/alba-village.json':`assets/maps/${d.id}-adventure.json`,tiles:`assets/tiles/${d.id}.svg`,playfield:{x:2,y:2,width:6,height:5}}));
+ const regions=definitions.map((d,index)=>({...d,index,title:AtlasWorlds[index].title,ids:Array.from({length:10},(_,i)=>idFor(index*10+i+1)),map:index===0?'assets/maps/alba-village.json':`assets/maps/${d.id}-adventure.json`,tiles:`assets/tiles/${d.id}.svg`,terrain:`assets/maps/${d.id}-terrain.webp`,playfield:{x:2,y:2,width:6,height:5}}));
  function chapter(index){return regions[index]??null;}
  function forMission(id){return regions.find(r=>r.ids.includes(id))??null;}
  function derive(index,completed){const r=chapter(index);if(!r)return null;const done=new Set(completed),count=r.ids.filter(id=>done.has(id)).length;return {chapter:index,count,total:r.ids.length,beacon:done.has(r.ids[1]),trail:done.has(r.ids[5]),complete:count===r.ids.length};}

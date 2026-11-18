@@ -2,12 +2,34 @@
 (() => {
  const host=document.createElement('div');host.className='scene-surface';host.id='adventure-world';host.hidden=true;host.setAttribute('aria-busy','true');document.getElementById('phaser-world').append(host);
  const TILE=64,OX=128,OY=128,frames=[2,0,3,1];
+ const terrainKey=region=>region.id+'-terrain';
  const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  let game,scene,latest,mission,region=ExpeditionCampaign.chapter(0),progress=ExpeditionCampaign.derive(0,[]),cameraMode=0;
  const cameraLabels=['Ver mapa completo','Seguir a Miaubit','Área de misión'];
  class AdventureScene extends Phaser.Scene {
   constructor(){super('expedition');this.actors=new Map();this.boxLabels=new Map();this.focused=null;this.terrain=[];}
-  preload(){for(const r of ExpeditionCampaign.regions){this.load.tilemapTiledJSON(r.id+'-map',SiteAssets.url(r.map));this.load.image(r.id+'-tiles',SiteAssets.url(r.tiles));}this.load.spritesheet('miaubit',SiteAssets.url('assets/atlas-directions.png'),{frameWidth:627,frameHeight:627});}
+  preload(){
+   this.requestedTerrain=new Set();
+   for(const r of ExpeditionCampaign.regions){
+    this.load.tilemapTiledJSON(r.id+'-map',SiteAssets.url(r.map));
+    this.load.image(r.id+'-tiles',SiteAssets.url(r.tiles));
+   }
+   this.load.spritesheet('miaubit',SiteAssets.url('assets/atlas-directions.png'),{frameWidth:627,frameHeight:627});
+  }
+  loadTerrain(chapter){
+   const key=terrainKey(chapter);
+   if(this.textures.exists(key)||this.requestedTerrain.has(key))return;
+   this.requestedTerrain.add(key);
+   this.load.image(key,SiteAssets.url(chapter.terrain));
+   this.load.start();
+  }
+  refreshTerrain(key,type){
+   // A chapter's art can arrive after the player has already moved on.
+   if(type!=='image'||this.renderedRegion!==region.index||key!==terrainKey(region))return;
+   this.clearTerrain();
+   this.drawTerrain();
+   this.drawProps();
+  }
   create(){
    this.forest=this.add.graphics().setDepth(-1);this.props=this.add.graphics().setDepth(0);this.items=this.add.graphics().setDepth(2);this.focus=this.add.graphics().setDepth(9);
    this.coordinateText=this.add.text(OX+5,OY+5,'',{fontFamily:'monospace',fontSize:'11px',color:'#f0d394',backgroundColor:'#0b1714',padding:{x:4,y:3}}).setDepth(10);
@@ -19,7 +41,11 @@
    // aspect ratio without resizing the window, so refresh before the next paint.
    this.hostObserver=new ResizeObserver(()=>{if(!host.hidden&&this.scale.getParentBounds())this.scale.refresh();});
    this.hostObserver.observe(host);
-   this.events.once('shutdown',()=>this.hostObserver.disconnect());
+   this.load.on('filecomplete',this.refreshTerrain,this);
+   this.events.once('shutdown',()=>{
+    this.hostObserver.disconnect();
+    this.load.off('filecomplete',this.refreshTerrain,this);
+   });
    document.getElementById('show-coordinates').addEventListener('change',()=>this.drawFocus());
    this.input.on('pointermove',p=>{const cell=this.cellAt(p.x,p.y);if(cell&&(cell.x!==this.focused?.x||cell.y!==this.focused?.y)){this.focused=cell;this.drawFocus();}});
    this.input.on('pointerdown',p=>{const cell=this.cellAt(p.x,p.y);if(cell)this.inspect(cell.x,cell.y);else {const point=this.cameras.main.getWorldPoint(p.x,p.y);if(progress.complete&&point.x>700&&Math.abs(point.y-288)<64)this.continueRegion();}});
@@ -35,13 +61,37 @@
    if(document.body.dataset.view!=='mission'){this.scene.sleep();this.game.loop.sleep();}
   }
   changeRegion(){
-   for(const layer of this.terrain)layer.destroy();this.terrain=[];this.map?.destroy();
-   this.map=this.make.tilemap({key:region.id+'-map'});const tiles=this.map.addTilesetImage(region.id,region.id+'-tiles');
+   this.clearTerrain();
+   this.map?.destroy();
+   this.map=this.make.tilemap({key:region.id+'-map'});
    this.renderedRegion=region.index;this.worldSignature=null;
-   for(const [i,name] of ['Suelo','Senderos','Vegetación'].entries())this.terrain.push(this.map.createLayer(name,tiles,0,0).setScale(2).setDepth(-10+i));
-   this.focused=null;this.drawLandscape();this.drawProps();this.drawFocus();
+   this.drawTerrain();
+   this.loadTerrain(region);
+   this.focused=null;this.drawProps();this.drawFocus();
    this.game.canvas.setAttribute('aria-label',`Escenario de ${region.title}. Flechas para explorar el área de programación; Intro para inspeccionar.`);
    host.dataset.region=region.id;this.configureCamera();
+  }
+  clearTerrain(){
+   for(const layer of this.terrain)layer.destroy();
+   this.terrain=[];
+  }
+  drawTerrain(){
+   const key=terrainKey(region);
+   if(this.textures.exists(key)){
+    this.forest.clear();
+    // This background depicts only terrain. Interactive objects render above it.
+    const art=this.add.image(0,0,key)
+     .setOrigin(0)
+     .setDisplaySize(this.map.widthInPixels*2,this.map.heightInPixels*2)
+     .setDepth(-10);
+    this.terrain.push(art);
+    return;
+   }
+   const tiles=this.map.addTilesetImage(region.id,region.id+'-tiles');
+   for(const [i,name] of ['Suelo','Senderos','Vegetación'].entries()){
+    this.terrain.push(this.map.createLayer(name,tiles,0,0).setScale(2).setDepth(-10+i));
+   }
+   this.drawLandscape();
   }
   continueRegion(){location.hash=region.index===8?'#map-9':'#map-'+(region.index+2);}
   configureCamera(){
@@ -110,14 +160,24 @@
   }
   drawProps(){
    if(!this.props)return;const g=this.props;g.clear();
-   g.fillStyle(0x455644);g.fillRect(83,272,26,32);g.fillRect(80,266,32,10);
+   // The stone arch raises the deck in the illustrated canal.
+   const beaconY=region.id==='canales'&&this.textures.exists(terrainKey(region))?217:264;
+   g.fillStyle(0x171d22);g.fillRect(80,beaconY+9,32,33);g.fillRect(77,beaconY-1,38,15);
+   g.fillStyle(0x455644);g.fillRect(83,beaconY+8,26,32);g.fillRect(80,beaconY+2,32,10);
    const accent=parseInt(region.palette[7].slice(1),16),lit=progress.complete;
-   g.fillStyle(progress.beacon?accent:0x647c65);g.fillTriangle(96,244,85,265,107,265);
-   if(progress.beacon){g.fillStyle(0xe9c96f,.12);g.fillCircle(96,264,36);}
+   g.lineStyle(4,0x171d22);g.strokeTriangle(96,beaconY-20,85,beaconY+1,107,beaconY+1);
+   g.fillStyle(progress.beacon?accent:0x647c65);g.fillTriangle(96,beaconY-20,85,beaconY+1,107,beaconY+1);
+   if(progress.beacon){g.fillStyle(0xe9c96f,.12);g.fillCircle(96,beaconY,36);}
    for(let i=0;i<10;i++){g.fillStyle(i<progress.count?0xf0c564:0x536148,1);g.fillRect(133+i*26,92,9,9);}
    for(let i=0;i<6;i++){g.fillStyle(progress.trail?0x95bc87:0x4b5f48);g.fillRect(55+i*12,403,6,6);}
-   g.lineStyle(3,lit?accent:0x776847);g.strokeRect(579,258,122,60);
-   for(let i=0;i<6;i++){g.fillStyle(lit?accent:0x78674c);g.fillRect(585+i*21,261,6,6);g.fillRect(585+i*21,307,6,6);}
+   if(region.id==='alba'&&lit){
+    g.fillStyle(accent);
+    for(const x of [580,610,644,674]){
+     g.fillRect(x,266,4,4);
+     g.fillRect(x,306,4,4);
+    }
+   }
+   g.lineStyle(4,0x171d22);g.strokePoints([{x:736,y:259},{x:752,y:288},{x:736,y:316},{x:720,y:288}],true);
    g.fillStyle(lit?accent:0x6d6896,.9);g.fillTriangle(736,259,720,288,752,288);g.fillTriangle(720,288,752,288,736,316);
    if(lit){g.fillStyle(accent,.12);g.fillCircle(736,288,43);}
    // Each landmark has a small restoration light; later lights need the whole chapter.
@@ -126,9 +186,18 @@
   paintItems(){
    const g=this.items;g.clear();if(!this.state)return;
    const stone=parseInt(region.palette[3].slice(1),16),dark=parseInt(region.palette[1].slice(1),16),accent=parseInt(region.palette[7].slice(1),16);
+   const targetRim=region.id==='alba'?0xc3e4a4:parseInt(region.palette[9].slice(1),16);
    const point=(x,y)=>({x:OX+(x+.5)*TILE,y:OY+(y+.5)*TILE});
    for(const [x,y] of this.state.world.chargers){const p=point(x,y);g.fillStyle(0x386b6c);g.fillRect(p.x-18,p.y-15,36,30);g.lineStyle(2,0x8ccac1);g.strokeRect(p.x-13,p.y-10,26,20);g.fillStyle(0xc3e3c9);g.fillRect(p.x-3,p.y-9,6,18);}
-   for(const [x,y] of this.state.world.targets){const p=point(x,y);g.lineStyle(3,accent,.9);g.strokeCircle(p.x,p.y,22);g.fillStyle(accent,.22);g.fillCircle(p.x,p.y,19);}
+   for(const [x,y] of this.state.world.targets){
+    const p=point(x,y);
+    g.lineStyle(7,0x171d22);
+    g.strokeCircle(p.x,p.y,22);
+    g.lineStyle(3,targetRim);
+    g.strokeCircle(p.x,p.y,22);
+    g.fillStyle(accent,.22);
+    g.fillCircle(p.x,p.y,19);
+   }
    for(const [x,y] of this.state.world.walls){const p=point(x,y);g.fillStyle(dark);g.fillRect(p.x-27,p.y-19,54,43);g.fillStyle(stone);g.fillTriangle(p.x-27,p.y-19,p.x-9,p.y-30,p.x+27,p.y-19);g.fillStyle(accent);g.fillRect(p.x-20,p.y-15,27,7);}
    const live=new Set();
    for(const [x,y,count] of this.state.world.boxes){if(!count)continue;const p=point(x,y);g.fillStyle(0x714c2d);g.fillRect(p.x-16,p.y-16,32,32);g.lineStyle(2,0xdcb56c);g.strokeRect(p.x-16,p.y-16,32,32);g.lineBetween(p.x-14,p.y-14,p.x+14,p.y+14);g.lineBetween(p.x-14,p.y+14,p.x+14,p.y-14);
